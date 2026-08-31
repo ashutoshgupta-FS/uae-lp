@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { ArrowRight, ArrowUpRight, MapPin, Mail, Phone, Plus } from 'lucide-react'
+import { ArrowRight, ArrowUpRight, ChevronDown, MapPin, Mail, Phone, Plus } from 'lucide-react'
 
 const BASE = 'https://81673378.delivery.rocketcdn.me/wp-content'
 const LOGO_URL = `${BASE}/themes/flipspaces_v2/assets/images/home/flipspaces-logo-black.png`
@@ -161,7 +161,7 @@ function Navbar() {
               <a
                 key={link.label}
                 href={link.href}
-                className="text-sm text-brand-dark tracking-wide uppercase hover:opacity-70 transition-opacity"
+                className="relative text-sm text-brand-dark tracking-wide uppercase py-1 after:content-[''] after:absolute after:left-0 after:-bottom-0.5 after:h-px after:w-0 after:bg-brand-dark after:transition-all after:duration-300 hover:after:w-full"
               >
                 {link.label}
               </a>
@@ -274,25 +274,43 @@ function Hero() {
           <ArrowRight className="w-3.5 h-3.5 text-brand-dark" />
         </a>
 
-        <h1 className="text-left text-3xl sm:text-4xl md:text-5xl lg:text-6xl text-brand-dark leading-[1.05] tracking-tight max-w-4xl font-helvetica-neue animate-fade-up stagger-4">
+        <h1 className="text-left text-4xl sm:text-5xl md:text-6xl lg:text-7xl text-brand-dark leading-[1.05] tracking-tight max-w-4xl font-display font-medium animate-fade-up stagger-4">
           One accountable team to design, build,
           <br className="hidden sm:block" /> and deliver your next workspace
         </h1>
 
         <TrustedBy />
       </div>
+
+      <div className="absolute bottom-8 left-1/2 -translate-x-1/2 z-10 animate-fade-up stagger-6">
+        <ChevronDown className="w-5 h-5 text-brand-dark/50 animate-bounce" />
+      </div>
     </section>
   )
 }
 
-function SectionHead({ eyebrow, title, dark }: { eyebrow: string; title: string; dark?: boolean }) {
+function SectionHead({
+  n,
+  eyebrow,
+  title,
+  dark,
+}: {
+  n: string
+  eyebrow: string
+  title: string
+  dark?: boolean
+}) {
   return (
     <div className="max-w-2xl mb-14 md:mb-16">
-      <p className={`text-xs tracking-[0.25em] uppercase mb-4 ${dark ? 'text-brand-accent' : 'text-brand-dark/50'}`}>
-        {eyebrow}
-      </p>
+      <div className="flex items-center gap-3 mb-5">
+        <span className={`text-xs font-medium ${dark ? 'text-brand-accent' : 'text-brand-dark/40'}`}>{n}</span>
+        <span className={`h-px w-8 ${dark ? 'bg-brand-accent/50' : 'bg-brand-dark/20'}`} />
+        <p className={`text-xs tracking-[0.25em] uppercase ${dark ? 'text-brand-accent' : 'text-brand-dark/50'}`}>
+          {eyebrow}
+        </p>
+      </div>
       <h2
-        className={`text-3xl md:text-4xl lg:text-5xl leading-[1.1] tracking-tight font-helvetica-neue ${
+        className={`text-3xl md:text-4xl lg:text-5xl leading-[1.15] tracking-tight font-display font-medium ${
           dark ? 'text-white' : 'text-brand-dark'
         }`}
       >
@@ -306,18 +324,18 @@ function Services() {
   return (
     <section id="services" className="py-24 md:py-32 bg-brand-cream">
       <div className="max-w-7xl mx-auto px-6 lg:px-8">
-        <SectionHead eyebrow="What we do" title="Four disciplines, one accountable team" />
+        <SectionHead n="01" eyebrow="What we do" title="Four disciplines, one accountable team" />
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 md:gap-8">
           {SERVICES.map((s) => (
             <div key={s.title} className="group">
-              <div className="rounded-2xl overflow-hidden mb-5 aspect-[4/3]">
+              <div className="rounded-2xl overflow-hidden mb-5 aspect-[4/3] shadow-sm group-hover:shadow-xl transition-shadow duration-500">
                 <img
                   src={s.img}
                   alt={s.title}
                   className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                 />
               </div>
-              <h3 className="text-lg text-brand-dark mb-2 font-helvetica-neue">{s.title}</h3>
+              <h3 className="text-lg text-brand-dark mb-2 font-display font-medium">{s.title}</h3>
               <p className="text-sm text-brand-dark/60 leading-relaxed">{s.desc}</p>
             </div>
           ))}
@@ -331,7 +349,7 @@ function Coverage() {
   return (
     <section id="coverage" className="py-24 md:py-32 bg-brand-dark">
       <div className="max-w-7xl mx-auto px-6 lg:px-8">
-        <SectionHead eyebrow="Where we build" title="Delivery on the ground across three countries" dark />
+        <SectionHead n="02" eyebrow="Where we build" title="Delivery on the ground across three countries" dark />
 
         <div className="grid grid-cols-2 md:grid-cols-4 gap-8 mb-16 md:mb-20 pb-16 md:pb-20 border-b border-white/10">
           <div>
@@ -354,10 +372,13 @@ function Coverage() {
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8">
           {REGIONS.map((r) => (
-            <div key={r.name} className="rounded-2xl border border-white/10 p-8">
+            <div
+              key={r.name}
+              className="rounded-2xl border border-white/10 p-8 hover:border-brand-accent/40 hover:bg-white/[0.03] transition-all duration-300"
+            >
               <div className="flex items-center gap-2 mb-6">
                 <MapPin className="w-4 h-4 text-brand-accent" />
-                <h3 className="text-xl text-white font-helvetica-neue">{r.name}</h3>
+                <h3 className="text-xl text-white font-display font-medium">{r.name}</h3>
               </div>
               <p className="text-sm text-white/50 mb-6">{r.detail}</p>
               <div className="space-y-2">
@@ -378,9 +399,9 @@ function Coverage() {
 
 function Spaces() {
   return (
-    <section id="spaces" className="py-24 md:py-32 bg-brand-cream">
+    <section id="spaces" className="py-24 md:py-32 bg-brand-stone">
       <div className="max-w-7xl mx-auto px-6 lg:px-8">
-        <SectionHead eyebrow="Spaces we build" title="Built for how your industry actually works" />
+        <SectionHead n="03" eyebrow="Spaces we build" title="Built for how your industry actually works" />
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8 mb-8 md:mb-10">
           {SPACES_FEATURED.map((s) => (
@@ -415,11 +436,15 @@ function Testimonials() {
   return (
     <section className="py-24 md:py-32 bg-white">
       <div className="max-w-7xl mx-auto px-6 lg:px-8">
-        <SectionHead eyebrow="What clients say" title="Rated 4.5★ from 700+ Google reviews" />
+        <SectionHead n="04" eyebrow="What clients say" title="Rated 4.5★ from 700+ Google reviews" />
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8">
           {TESTIMONIALS.map((t) => (
-            <blockquote key={t.role} className="rounded-2xl border border-brand-dark/10 p-8">
-              <p className="text-brand-dark leading-relaxed mb-6">&ldquo;{t.quote}&rdquo;</p>
+            <blockquote
+              key={t.role}
+              className="rounded-2xl border border-brand-dark/10 p-8 hover:border-brand-accent/40 hover:shadow-lg transition-all duration-300"
+            >
+              <span className="block text-4xl text-brand-accent font-display leading-none mb-3">&ldquo;</span>
+              <p className="text-brand-dark leading-relaxed mb-6">{t.quote}</p>
               <cite className="text-xs uppercase tracking-wide text-brand-dark/50 not-italic">{t.role}</cite>
             </blockquote>
           ))}
@@ -434,7 +459,7 @@ function Insights() {
   return (
     <section id="insights" className="py-24 md:py-32 bg-brand-cream">
       <div className="max-w-7xl mx-auto px-6 lg:px-8">
-        <SectionHead eyebrow="From the journal" title="Perspectives on the modern workspace" />
+        <SectionHead n="05" eyebrow="From the journal" title="Perspectives on the modern workspace" />
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8">
           {INSIGHTS.map((post) => (
             <a key={post.href} href={post.href} target="_blank" rel="noreferrer" className="group block">
@@ -446,7 +471,7 @@ function Insights() {
                 />
               </div>
               <div className="flex items-start justify-between gap-3">
-                <h3 className="text-base text-brand-dark leading-snug font-helvetica-neue">{post.title}</h3>
+                <h3 className="text-base text-brand-dark leading-snug font-display font-medium">{post.title}</h3>
                 <ArrowUpRight className="w-4 h-4 text-brand-dark/40 shrink-0 mt-1 group-hover:text-brand-accent transition-colors" />
               </div>
             </a>
@@ -462,15 +487,17 @@ function FAQ() {
   return (
     <section id="faq" className="py-24 md:py-32 bg-white">
       <div className="max-w-3xl mx-auto px-6 lg:px-8">
-        <SectionHead eyebrow="Questions" title="Frequently asked questions" />
+        <SectionHead n="06" eyebrow="Questions" title="Frequently asked questions" />
         <div className="divide-y divide-brand-dark/10">
           {FAQS.map((item, i) => (
             <div key={item.q}>
               <button
                 onClick={() => setOpen(open === i ? null : i)}
-                className="w-full flex items-center justify-between gap-4 py-6 text-left"
+                className="w-full flex items-center justify-between gap-4 py-6 text-left group"
               >
-                <span className="text-base md:text-lg text-brand-dark font-helvetica-neue">{item.q}</span>
+                <span className="text-base md:text-lg text-brand-dark font-display font-medium group-hover:text-brand-accent transition-colors">
+                  {item.q}
+                </span>
                 <Plus
                   className={`w-5 h-5 text-brand-dark shrink-0 transition-transform duration-300 ${
                     open === i ? 'rotate-45' : ''
@@ -497,7 +524,7 @@ function CTA() {
     <section id="cta" className="py-24 md:py-32 bg-brand-dark">
       <div className="max-w-3xl mx-auto px-6 lg:px-8 text-center">
         <p className="text-xs tracking-[0.25em] uppercase text-brand-accent mb-4">Get started</p>
-        <h2 className="text-3xl md:text-4xl lg:text-5xl text-white leading-[1.1] tracking-tight font-helvetica-neue mb-10">
+        <h2 className="text-3xl md:text-4xl lg:text-5xl text-white leading-[1.1] tracking-tight font-display font-medium mb-10">
           Know your number before you commit
         </h2>
 
@@ -530,7 +557,7 @@ function CTA() {
 
 function Footer() {
   return (
-    <footer className="bg-brand-dark border-t border-white/10 py-16">
+    <footer className="bg-brand-dark border-t-2 border-brand-accent py-16">
       <div className="max-w-7xl mx-auto px-6 lg:px-8">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-8 mb-12">
           <img src={LOGO_URL} alt="Flipspaces" className="h-6 w-auto" style={{ filter: 'invert(1) brightness(2)' }} />
