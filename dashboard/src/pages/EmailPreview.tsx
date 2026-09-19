@@ -35,24 +35,25 @@ export default function EmailPreview() {
       />
 
       <div className="w-full max-w-[640px] bg-white rounded-2xl overflow-hidden border border-line">
-        <div className="bg-ink px-8 py-8 flex flex-col items-center gap-3">
-          <span className="font-body text-[11px] font-semibold tracking-[2px] text-faint uppercase">
+        <div className="bg-ink px-5 sm:px-8 py-6 sm:py-8 flex flex-col items-center gap-3 text-center">
+          <span className="font-body text-[10px] sm:text-[11px] font-semibold tracking-[2px] text-faint uppercase">
             Weekly Report — as of 9 Aug 2026 · {segment}
           </span>
           <Logo />
-          <span className="font-body text-[11px] font-semibold tracking-[1.5px] text-faint uppercase">
+          <span className="font-body text-[10px] sm:text-[11px] font-semibold tracking-[1.5px] text-faint uppercase">
             Central Marketing · Weekly Report
           </span>
         </div>
 
-        <div className="p-8 flex flex-col gap-8">
+        <div className="p-5 sm:p-8 flex flex-col gap-6 sm:gap-8">
           <p className="font-body text-sm text-ink">
             Hi team, here's the {segment} lead-gen snapshot for the month, as of 9 Aug 2026.
           </p>
 
           <div className="flex flex-col gap-3">
             <h3 className="font-heading font-bold text-sm text-ink uppercase tracking-wide">Monthly Targets — August 2026</h3>
-            <table className="w-full border border-line rounded-lg overflow-hidden text-left">
+            <div className="overflow-x-auto rounded-lg border border-line">
+            <table className="w-full min-w-[420px] text-left">
               <thead>
                 <tr className="bg-panel">
                   {['Metric', 'Target', 'Achieved', 'Deficit'].map((h) => (
@@ -76,10 +77,12 @@ export default function EmailPreview() {
               </tbody>
             </table>
           </div>
+          </div>
 
           <div className="flex flex-col gap-3">
             <h3 className="font-heading font-bold text-sm text-ink uppercase tracking-wide">Source-wise Target vs Achieved</h3>
-            <table className="w-full border border-line rounded-lg overflow-hidden text-left">
+            <div className="overflow-x-auto rounded-lg border border-line">
+            <table className="w-full min-w-[420px] text-left">
               <thead>
                 <tr className="bg-panel">
                   {['Source', 'Leads', 'Intel', 'PL', 'Login'].map((h) => (
@@ -109,6 +112,7 @@ export default function EmailPreview() {
               </tbody>
             </table>
           </div>
+          </div>
 
           <div className="flex flex-col gap-3">
             <div className="flex items-center justify-between">
@@ -117,7 +121,7 @@ export default function EmailPreview() {
                 {googleAdsAugust.sts} STS · {googleAdsAugust.preLogin} PL · {googleAdsAugust.login} Login
               </span>
             </div>
-            <div className="bg-panel rounded-lg p-4 grid grid-cols-5 gap-3">
+            <div className="bg-panel rounded-lg p-4 grid grid-cols-2 sm:grid-cols-5 gap-3">
               <Metric label="Spend" value={inr(googleAdsAugust.spend)} />
               <Metric label="Impr." value={googleAdsAugust.impressions.toLocaleString('en-IN')} />
               <Metric label="Clicks" value={googleAdsAugust.clicks.toString()} />
@@ -138,7 +142,7 @@ export default function EmailPreview() {
                 {linkedinAugust.sts} STS · {linkedinAugust.preLogin} PL · {linkedinAugust.login} Login
               </span>
             </div>
-            <div className="bg-panel rounded-lg p-4 grid grid-cols-5 gap-3">
+            <div className="bg-panel rounded-lg p-4 grid grid-cols-2 sm:grid-cols-5 gap-3">
               <Metric label="Spend" value={inr(linkedinAugust.spend)} />
               <Metric label="Impr." value={linkedinAugust.impressions.toLocaleString('en-IN')} />
               <Metric label="Clicks" value={linkedinAugust.clicks.toString()} />
@@ -155,7 +159,7 @@ export default function EmailPreview() {
 
           <div className="flex flex-col gap-3">
             <h3 className="font-heading font-bold text-sm text-ink uppercase tracking-wide">Outbound Calling Activity</h3>
-            <div className="bg-panel rounded-lg p-4 grid grid-cols-5 gap-3">
+            <div className="bg-panel rounded-lg p-4 grid grid-cols-2 sm:grid-cols-5 gap-3">
               <Metric label="Dialed" value={outboundCalling.dialed.toString()} />
               <Metric label="Connected" value={outboundCalling.connected.toString()} />
               <Metric label="Ringing" value={outboundCalling.ringing.toString()} />

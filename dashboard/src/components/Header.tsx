@@ -1,12 +1,13 @@
+import { LayoutGrid, Mail, UploadCloud, Users, Wallet } from 'lucide-react'
 import { useStore } from '../store'
 import type { Page } from '../types'
 
-const NAV: { id: Page; label: string }[] = [
-  { id: 'overview', label: 'Overview' },
-  { id: 'spends', label: 'Spends' },
-  { id: 'uploads', label: 'Uploads' },
-  { id: 'sources', label: 'Lead Analyser' },
-  { id: 'email', label: 'Email Preview' },
+const NAV: { id: Page; label: string; icon: typeof LayoutGrid }[] = [
+  { id: 'overview', label: 'Overview', icon: LayoutGrid },
+  { id: 'spends', label: 'Spends', icon: Wallet },
+  { id: 'uploads', label: 'Uploads', icon: UploadCloud },
+  { id: 'sources', label: 'Lead Analyser', icon: Users },
+  { id: 'email', label: 'Email Preview', icon: Mail },
 ]
 
 export function Logo({ light = true }: { light?: boolean }) {
@@ -25,16 +26,21 @@ export function Logo({ light = true }: { light?: boolean }) {
   )
 }
 
+function useActivePage() {
+  const { page } = useStore()
+  return page === 'sources' || page === 'analysis' ? 'sources' : page
+}
+
 export default function Header() {
-  const { page, setPage } = useStore()
-  const active = page === 'sources' || page === 'analysis' ? 'sources' : page
+  const { setPage } = useStore()
+  const active = useActivePage()
 
   return (
-    <div className="bg-ink px-6 sm:px-10 py-4 flex items-center justify-between flex-wrap gap-4 sticky top-0 z-30">
-      <button onClick={() => setPage('overview')} className="cursor-pointer">
+    <div className="bg-ink px-4 sm:px-10 py-3 sm:py-4 flex items-center justify-between gap-4 sticky top-0 z-30">
+      <button onClick={() => setPage('overview')} className="cursor-pointer shrink-0">
         <Logo />
       </button>
-      <div className="flex items-center gap-5 sm:gap-7 flex-wrap">
+      <div className="hidden sm:flex items-center gap-5 sm:gap-7 flex-wrap">
         {NAV.map((item) => (
           <button
             key={item.id}
@@ -46,10 +52,42 @@ export default function Header() {
             {item.label}
           </button>
         ))}
-        <div className="w-9 h-9 rounded-full bg-avatar border border-[#3A3934] flex items-center justify-center font-heading font-semibold text-[13px] text-white">
-          AG
-        </div>
+      </div>
+      <div className="w-9 h-9 rounded-full bg-avatar border border-[#3A3934] flex items-center justify-center font-heading font-semibold text-[13px] text-white shrink-0">
+        AG
       </div>
     </div>
+  )
+}
+
+export function BottomNav() {
+  const { setPage } = useStore()
+  const active = useActivePage()
+
+  return (
+    <nav className="sm:hidden fixed bottom-0 left-0 right-0 z-40 bg-ink border-t border-[#2A2A28] safe-bottom">
+      <div className="flex items-stretch justify-between px-1">
+        {NAV.map((item) => {
+          const Icon = item.icon
+          const isActive = active === item.id
+          return (
+            <button
+              key={item.id}
+              onClick={() => setPage(item.id)}
+              className="flex-1 flex flex-col items-center justify-center gap-1 py-2.5 min-w-0"
+            >
+              <Icon size={20} strokeWidth={isActive ? 2.4 : 1.8} color={isActive ? '#C6A15B' : '#9B9890'} />
+              <span
+                className={`font-body text-[10px] font-semibold leading-none truncate max-w-full px-1 ${
+                  isActive ? 'text-white' : 'text-faint'
+                }`}
+              >
+                {item.id === 'sources' ? 'Leads' : item.id === 'email' ? 'Email' : item.label}
+              </span>
+            </button>
+          )
+        })}
+      </div>
+    </nav>
   )
 }

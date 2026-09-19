@@ -100,7 +100,10 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
   }, [persisted])
 
   useEffect(() => {
-    const onHash = () => setPageState(pageFromHash())
+    const onHash = () => {
+      setPageState(pageFromHash())
+      window.scrollTo(0, 0)
+    }
     window.addEventListener('hashchange', onHash)
     return () => window.removeEventListener('hashchange', onHash)
   }, [])
@@ -108,6 +111,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
   const setPage = useCallback((p: Page) => {
     window.location.hash = `/${p}`
     setPageState(p)
+    window.scrollTo(0, 0)
   }, [])
 
   const setSegment = useCallback((s: Segment) => {

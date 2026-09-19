@@ -25,8 +25,8 @@ export default function DataSources() {
     >
       <div>
         <Eyebrow>Lead Analyser</Eyebrow>
-        <h1 className="font-heading font-bold text-[32px] text-ink">Lead Data Sources</h1>
-        <p className="font-body text-[15px] text-muted mt-2 max-w-[640px]">
+        <h1 className="font-heading font-bold text-[26px] sm:text-[32px] text-ink">Lead Data Sources</h1>
+        <p className="font-body text-sm sm:text-[15px] text-muted mt-2 max-w-[640px]">
           Lead Desk – Master is the primary source. Add other lead lists below and they're standardized, deduplicated
           by phone and email, and merged in automatically.
         </p>
@@ -37,11 +37,11 @@ export default function DataSources() {
 
       <div className="flex flex-col gap-4">
         <h2 className="font-body text-[13px] font-semibold tracking-[1.5px] text-faint uppercase">Primary Source</h2>
-        <div className="border-2 border-gold rounded-2xl px-7 py-5 flex items-center justify-between flex-wrap gap-4">
+        <div className="border-2 border-gold rounded-2xl px-5 sm:px-7 py-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div className="flex items-center gap-4">
             <Avatar initials="LD" />
             <div>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 flex-wrap">
                 <span className="font-heading font-semibold text-[16px] text-ink">Lead Desk – Master</span>
                 <span className="font-body font-semibold text-[11px] px-2.5 py-1 rounded-full bg-gold-soft text-gold-dark">
                   Primary
@@ -53,8 +53,8 @@ export default function DataSources() {
               </div>
             </div>
           </div>
-          <div className="flex items-center gap-6">
-            <div className="text-right">
+          <div className="flex items-center justify-between sm:justify-end gap-6 border-t sm:border-t-0 border-line pt-4 sm:pt-0">
+            <div className="sm:text-right">
               <div className="font-heading font-bold text-[26px] text-ink leading-none">
                 {primary.leads.toLocaleString('en-IN')}
               </div>
@@ -95,8 +95,8 @@ export default function DataSources() {
       </div>
 
       <div className="flex flex-col gap-4">
-        <h2 className="font-heading font-bold text-xl text-ink">Merge Pipeline</h2>
-        <div className="border border-line rounded-2xl p-6 flex flex-col gap-6">
+        <h2 className="font-heading font-bold text-lg sm:text-xl text-ink">Merge Pipeline</h2>
+        <div className="border border-line rounded-2xl p-4 sm:p-6 flex flex-col gap-6">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             {STEPS.map((step) => (
               <div key={step.title} className="bg-panel rounded-xl p-4">
@@ -114,8 +114,8 @@ export default function DataSources() {
 
           <div className="border-t border-line" />
 
-          <div className="flex items-center justify-between flex-wrap gap-6">
-            <div className="flex items-center gap-8 flex-wrap">
+          <div className="flex flex-col gap-6">
+            <div className="grid grid-cols-2 sm:flex sm:items-center gap-4 sm:gap-8">
               <div>
                 <div className="font-heading font-bold text-xl text-ink">{merge.fromMaster.toLocaleString('en-IN')}</div>
                 <div className="font-body text-[12px] text-faint">From Lead Desk</div>
@@ -133,12 +133,12 @@ export default function DataSources() {
                 <div className="font-body text-[12px] text-faint">Unique combined leads</div>
               </div>
             </div>
-            <div className="flex flex-col items-end gap-2">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
               <span className="font-body text-[13px] text-faint">Runs automatically every 6 hours · last run {lastMergeRun}</span>
               <button
                 onClick={runMerge}
                 disabled={merging}
-                className="bg-gold hover:bg-gold-dark hover:text-white text-ink font-body font-semibold text-sm px-6 py-3 rounded-lg transition-colors disabled:opacity-70 flex items-center gap-2"
+                className="bg-gold hover:bg-gold-dark hover:text-white text-ink font-body font-semibold text-sm px-6 py-3 rounded-lg transition-colors disabled:opacity-70 flex items-center justify-center gap-2"
               >
                 {merging && <span className="w-3.5 h-3.5 border-2 border-ink/40 border-t-ink rounded-full animate-spin-slow" />}
                 {merging ? 'Merging…' : 'Run merge now'}

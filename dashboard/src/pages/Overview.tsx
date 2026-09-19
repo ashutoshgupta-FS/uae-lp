@@ -2,7 +2,7 @@ import { useMemo, useRef, useState } from 'react'
 import { useStore } from '../store'
 import { buildWeeklyMetrics, getMtdData, MTD_WEEK_LABELS, parseMtdCsv, serializeMtdCsv } from '../data'
 import type { MetricRow, MtdSegmentData, OverviewSegment } from '../types'
-import { Eyebrow, PageShell } from '../components/ui'
+import { Eyebrow, ModalShell, PageShell } from '../components/ui'
 
 export default function Overview() {
   const { segment: globalSegment, setSegment, setPage, mtdData, mtdImportInfo, updateMtdData } = useStore()
@@ -29,15 +29,15 @@ export default function Overview() {
         </button>
       }
     >
-      <div className="flex items-end justify-between flex-wrap gap-6">
+      <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-5 sm:gap-6">
         <div>
           <Eyebrow>Central Marketing</Eyebrow>
-          <h1 className="font-heading font-bold text-[32px] text-ink">Lead-Gen Performance Report</h1>
-          <p className="font-body text-[15px] text-muted mt-2 max-w-[560px]">
+          <h1 className="font-heading font-bold text-[26px] sm:text-[32px] text-ink">Lead-Gen Performance Report</h1>
+          <p className="font-body text-sm sm:text-[15px] text-muted mt-2 max-w-[560px]">
             MTD funnel performance and weekly bifurcation for the SDR team, as of 19 Sep 2026.
           </p>
         </div>
-        <div className="flex flex-col items-end gap-2">
+        <div className="flex flex-col items-start sm:items-end gap-2">
           <span className="font-body text-[12px] font-semibold tracking-[1px] text-faint uppercase">Segment</span>
           <ThreeWayToggle value={segment} onChange={chooseSegment} />
         </div>
@@ -46,8 +46,8 @@ export default function Overview() {
       <div className="border-t border-line" />
 
       <div className="flex flex-col gap-4">
-        <div className="flex items-center justify-between flex-wrap gap-3">
-          <h2 className="font-heading font-bold text-xl text-ink">MTD — September, 2026</h2>
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <h2 className="font-heading font-bold text-lg sm:text-xl text-ink">MTD — September, 2026</h2>
           <div className="flex items-center gap-3 flex-wrap">
             <span className="font-body text-[13px] text-faint">{segment} · as of 19 Sep 2026</span>
             {segment !== 'All' && (
@@ -69,7 +69,7 @@ export default function Overview() {
       </div>
 
       <div className="flex flex-col gap-6">
-        <h2 className="font-heading font-bold text-xl text-ink">Weekly Bifurcation</h2>
+        <h2 className="font-heading font-bold text-lg sm:text-xl text-ink">Weekly Bifurcation</h2>
         {weeks.map((rows, i) => (
           <div key={MTD_WEEK_LABELS[i]} className="flex flex-col gap-3">
             <span className="font-body text-[13px] font-semibold tracking-[1px] text-gold-dark uppercase">
@@ -81,7 +81,7 @@ export default function Overview() {
       </div>
 
       <div className="flex flex-col gap-4">
-        <h2 className="font-heading font-bold text-xl text-ink">Leads by Stage</h2>
+        <h2 className="font-heading font-bold text-lg sm:text-xl text-ink">Leads by Stage</h2>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-5 items-start">
           <StageNameColumn title="STS" names={mtd.stageNames.sts} />
           <StageNameColumn title="PL" names={mtd.stageNames.pl} />
@@ -90,15 +90,15 @@ export default function Overview() {
       </div>
 
       <div className="flex flex-col gap-4">
-        <h2 className="font-heading font-bold text-xl text-ink">PL → Login Watchlist</h2>
+        <h2 className="font-heading font-bold text-lg sm:text-xl text-ink">PL → Login Watchlist</h2>
         <div className="border border-line rounded-2xl overflow-hidden">
           <table className="w-full text-left">
             <thead>
               <tr className="bg-panel">
-                <th className="font-body text-[11px] font-semibold tracking-[1px] text-faint uppercase px-6 py-3">
+                <th className="font-body text-[11px] font-semibold tracking-[1px] text-faint uppercase px-4 sm:px-6 py-3">
                   PL to be Login
                 </th>
-                <th className="font-body text-[11px] font-semibold tracking-[1px] text-faint uppercase px-6 py-3">
+                <th className="font-body text-[11px] font-semibold tracking-[1px] text-faint uppercase px-4 sm:px-6 py-3">
                   PL Month
                 </th>
               </tr>
@@ -106,15 +106,15 @@ export default function Overview() {
             <tbody>
               {mtd.plToLogin.length === 0 ? (
                 <tr>
-                  <td colSpan={2} className="px-6 py-6 font-body text-sm text-faint text-center">
+                  <td colSpan={2} className="px-4 sm:px-6 py-6 font-body text-sm text-faint text-center">
                     No Pre Login leads queued to convert this month.
                   </td>
                 </tr>
               ) : (
                 mtd.plToLogin.map((row, i) => (
                   <tr key={row.company + i} className="border-t border-line">
-                    <td className="px-6 py-4 font-body font-semibold text-sm text-ink">{row.company}</td>
-                    <td className="px-6 py-4 font-body text-sm text-muted">{row.month}</td>
+                    <td className="px-4 sm:px-6 py-4 font-body font-semibold text-sm text-ink">{row.company}</td>
+                    <td className="px-4 sm:px-6 py-4 font-body text-sm text-muted">{row.month}</td>
                   </tr>
                 ))
               )}
@@ -141,12 +141,12 @@ export default function Overview() {
 function ThreeWayToggle({ value, onChange }: { value: OverviewSegment; onChange: (v: OverviewSegment) => void }) {
   const options: OverviewSegment[] = ['SME', 'Enterprise', 'All']
   return (
-    <div className="flex bg-panel border border-line rounded-full p-1">
+    <div className="flex bg-panel border border-line rounded-full p-1 w-full sm:w-auto">
       {options.map((opt) => (
         <button
           key={opt}
           onClick={() => onChange(opt)}
-          className={`font-body font-semibold text-[13px] px-4 py-2 rounded-full transition-colors whitespace-nowrap ${
+          className={`flex-1 sm:flex-none font-body font-semibold text-[13px] px-4 py-2 rounded-full transition-colors whitespace-nowrap ${
             value === opt ? 'bg-ink text-white' : 'text-muted hover:text-ink'
           }`}
         >
@@ -158,45 +158,81 @@ function ThreeWayToggle({ value, onChange }: { value: OverviewSegment; onChange:
 }
 
 function MetricsTable({ rows }: { rows: MetricRow[] }) {
+  const withDerived = rows.map((row) => {
+    const deficit = Math.max(row.target - row.achieved, 0)
+    const remark = row.target > 0 ? Math.round((deficit / row.target) * 10000) / 100 : null
+    return { ...row, deficit, remark, isLeads: row.metric === 'Leads' }
+  })
+
   return (
-    <div className="border border-line rounded-2xl overflow-hidden">
-      <table className="w-full text-left">
-        <thead>
-          <tr className="bg-panel">
-            {['Metric', 'Target (Monthly)', 'Achieved', 'Deficit', 'Remark / Key Insights'].map((h) => (
-              <th key={h} className="font-body text-[11px] font-semibold tracking-[1px] text-faint uppercase px-6 py-3">
-                {h}
-              </th>
-            ))}
-          </tr>
-        </thead>
-        <tbody>
-          {rows.map((row, i) => {
-            const deficit = Math.max(row.target - row.achieved, 0)
-            const remark = row.target > 0 ? Math.round((deficit / row.target) * 10000) / 100 : null
-            const isLeads = row.metric === 'Leads'
-            return (
+    <>
+      <div className="sm:hidden flex flex-col gap-3">
+        {withDerived.map((row) => (
+          <div key={row.metric} className="border border-line rounded-2xl p-4 flex flex-col gap-3">
+            <div className="flex items-center justify-between">
+              <span className="font-heading font-semibold text-sm text-ink">{row.metric}</span>
+              {!row.isLeads && row.remark !== null && (
+                <span
+                  className={`inline-block font-body font-semibold text-[12px] px-2.5 py-1 rounded-full ${
+                    row.deficit > 0 ? 'bg-[#F5E4DC] text-rust' : 'bg-gold-soft text-gold-dark'
+                  }`}
+                >
+                  {row.remark.toFixed(2)}%
+                </span>
+              )}
+            </div>
+            <div className="grid grid-cols-3 gap-2">
+              <MiniStat label="Target" value={row.target} />
+              <MiniStat label="Achieved" value={row.achieved} />
+              <MiniStat label="Deficit" value={row.deficit} accent={row.deficit > 0} />
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <div className="hidden sm:block border border-line rounded-2xl overflow-hidden">
+        <table className="w-full text-left">
+          <thead>
+            <tr className="bg-panel">
+              {['Metric', 'Target (Monthly)', 'Achieved', 'Deficit', 'Remark / Key Insights'].map((h) => (
+                <th key={h} className="font-body text-[11px] font-semibold tracking-[1px] text-faint uppercase px-6 py-3">
+                  {h}
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {withDerived.map((row, i) => (
               <tr key={row.metric} className={i > 0 ? 'border-t border-line' : ''}>
                 <td className="px-6 py-4 font-body font-semibold text-sm text-ink">{row.metric}</td>
                 <td className="px-6 py-4 font-body text-sm text-ink">{row.target}</td>
                 <td className="px-6 py-4 font-body text-sm text-ink">{row.achieved}</td>
-                <td className="px-6 py-4 font-body text-sm text-ink">{deficit}</td>
+                <td className="px-6 py-4 font-body text-sm text-ink">{row.deficit}</td>
                 <td className="px-6 py-4">
-                  {!isLeads && remark !== null && (
+                  {!row.isLeads && row.remark !== null && (
                     <span
                       className={`inline-block font-body font-semibold text-[12px] px-2.5 py-1 rounded-full ${
-                        deficit > 0 ? 'bg-[#F5E4DC] text-rust' : 'bg-gold-soft text-gold-dark'
+                        row.deficit > 0 ? 'bg-[#F5E4DC] text-rust' : 'bg-gold-soft text-gold-dark'
                       }`}
                     >
-                      {remark.toFixed(2)}%
+                      {row.remark.toFixed(2)}%
                     </span>
                   )}
                 </td>
               </tr>
-            )
-          })}
-        </tbody>
-      </table>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </>
+  )
+}
+
+function MiniStat({ label, value, accent }: { label: string; value: number; accent?: boolean }) {
+  return (
+    <div className="flex flex-col gap-0.5">
+      <span className="font-body text-[10px] text-faint uppercase tracking-[0.5px]">{label}</span>
+      <span className={`font-heading font-bold text-[15px] ${accent ? 'text-rust' : 'text-ink'}`}>{value}</span>
     </div>
   )
 }
@@ -306,99 +342,12 @@ function MtdImportModal({
   }
 
   return (
-    <div className="fixed inset-0 bg-ink/40 z-50 flex items-center justify-center p-4" onClick={onClose}>
-      <div
-        className="bg-white rounded-2xl w-full max-w-2xl max-h-[85vh] overflow-hidden flex flex-col shadow-xl"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <div className="flex items-center justify-between px-6 py-4 border-b border-line">
-          <h3 className="font-heading font-semibold text-[16px] text-ink">Upload / Edit {label} data</h3>
-          <button onClick={onClose} className="font-body text-faint hover:text-ink text-lg leading-none">
-            ✕
-          </button>
-        </div>
-
-        <div className="overflow-y-auto px-6 py-5 flex flex-col gap-6">
-          <div
-            onClick={() => inputRef.current?.click()}
-            onDragOver={(e) => e.preventDefault()}
-            onDrop={(e) => {
-              e.preventDefault()
-              if (e.dataTransfer.files[0]) handleFile(e.dataTransfer.files[0])
-            }}
-            className="cursor-pointer border border-dashed border-line hover:border-gold rounded-xl py-6 flex flex-col items-center justify-center gap-1 transition-colors"
-          >
-            <span className="font-body font-semibold text-sm text-ink">Drag a CSV, XLSX or screenshot here</span>
-            <span className="font-body text-[13px] text-faint">or click to browse</span>
-            {attachedFile && <span className="font-body text-[12px] text-gold-dark mt-1">Attached: {attachedFile}</span>}
-            <input
-              ref={inputRef}
-              type="file"
-              accept=".csv,.xlsx,image/*"
-              className="hidden"
-              onChange={(e) => {
-                if (e.target.files?.[0]) handleFile(e.target.files[0])
-                e.target.value = ''
-              }}
-            />
-          </div>
-          {note && <p className="font-body text-[13px] text-muted -mt-3">{note}</p>}
-          <button
-            onClick={downloadTemplate}
-            className="font-body font-semibold text-[13px] text-gold-dark hover:text-gold self-start -mt-3"
-          >
-            Download current {label} data as CSV template ↓
-          </button>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            {metricRows.map((row, i) => (
-              <div key={row.metric} className="border border-line rounded-xl p-4 flex flex-col gap-2">
-                <span className="font-heading font-semibold text-sm text-ink">{row.metric}</span>
-                <div className="flex items-center gap-2">
-                  <label className="flex flex-col gap-1 flex-1">
-                    <span className="font-body text-[11px] text-faint uppercase tracking-[1px]">Target</span>
-                    <input
-                      type="number"
-                      min={0}
-                      value={row.target}
-                      onChange={(e) =>
-                        setMetricRows((prev) => prev.map((r, idx) => (idx === i ? { ...r, target: e.target.value } : r)))
-                      }
-                      className="font-body text-sm border border-line rounded-lg px-3 py-2 outline-none focus:border-gold"
-                    />
-                  </label>
-                  <label className="flex flex-col gap-1 flex-1">
-                    <span className="font-body text-[11px] text-faint uppercase tracking-[1px]">Achieved</span>
-                    <input
-                      type="number"
-                      min={0}
-                      value={row.achieved}
-                      onChange={(e) =>
-                        setMetricRows((prev) => prev.map((r, idx) => (idx === i ? { ...r, achieved: e.target.value } : r)))
-                      }
-                      className="font-body text-sm border border-line rounded-lg px-3 py-2 outline-none focus:border-gold"
-                    />
-                  </label>
-                </div>
-              </div>
-            ))}
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-            <TextAreaField label="STS names (one per line)" value={sts} onChange={setSts} />
-            <TextAreaField label="PL names (one per line)" value={pl} onChange={setPl} />
-            <TextAreaField label="Login names (one per line)" value={login} onChange={setLogin} />
-          </div>
-
-          <TextAreaField
-            label="PL → Login watchlist (Company, Month per line)"
-            value={watchlist}
-            onChange={setWatchlist}
-            rows={4}
-          />
-        </div>
-
-        <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-line">
+    <ModalShell
+      title={`Upload / Edit ${label} data`}
+      onClose={onClose}
+      maxWidth="sm:max-w-2xl"
+      footer={
+        <>
           <button onClick={onClose} className="font-body font-semibold text-sm text-muted hover:text-ink px-4 py-2">
             Cancel
           </button>
@@ -408,9 +357,87 @@ function MtdImportModal({
           >
             Save {label} data
           </button>
-        </div>
+        </>
+      }
+    >
+      <div
+        onClick={() => inputRef.current?.click()}
+        onDragOver={(e) => e.preventDefault()}
+        onDrop={(e) => {
+          e.preventDefault()
+          if (e.dataTransfer.files[0]) handleFile(e.dataTransfer.files[0])
+        }}
+        className="cursor-pointer border border-dashed border-line hover:border-gold rounded-xl py-6 flex flex-col items-center justify-center gap-1 transition-colors"
+      >
+        <span className="font-body font-semibold text-sm text-ink text-center px-2">Drag a CSV, XLSX or screenshot here</span>
+        <span className="font-body text-[13px] text-faint">or tap to browse</span>
+        {attachedFile && <span className="font-body text-[12px] text-gold-dark mt-1">Attached: {attachedFile}</span>}
+        <input
+          ref={inputRef}
+          type="file"
+          accept=".csv,.xlsx,image/*"
+          className="hidden"
+          onChange={(e) => {
+            if (e.target.files?.[0]) handleFile(e.target.files[0])
+            e.target.value = ''
+          }}
+        />
       </div>
-    </div>
+      {note && <p className="font-body text-[13px] text-muted -mt-2">{note}</p>}
+      <button
+        onClick={downloadTemplate}
+        className="font-body font-semibold text-[13px] text-gold-dark hover:text-gold self-start -mt-2"
+      >
+        Download current {label} data as CSV template ↓
+      </button>
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        {metricRows.map((row, i) => (
+          <div key={row.metric} className="border border-line rounded-xl p-4 flex flex-col gap-2">
+            <span className="font-heading font-semibold text-sm text-ink">{row.metric}</span>
+            <div className="flex items-center gap-2">
+              <label className="flex flex-col gap-1 flex-1 min-w-0">
+                <span className="font-body text-[11px] text-faint uppercase tracking-[1px]">Target</span>
+                <input
+                  type="number"
+                  min={0}
+                  value={row.target}
+                  onChange={(e) =>
+                    setMetricRows((prev) => prev.map((r, idx) => (idx === i ? { ...r, target: e.target.value } : r)))
+                  }
+                  className="w-full min-w-0 font-body text-sm border border-line rounded-lg px-3 py-2 outline-none focus:border-gold"
+                />
+              </label>
+              <label className="flex flex-col gap-1 flex-1 min-w-0">
+                <span className="font-body text-[11px] text-faint uppercase tracking-[1px]">Achieved</span>
+                <input
+                  type="number"
+                  min={0}
+                  value={row.achieved}
+                  onChange={(e) =>
+                    setMetricRows((prev) => prev.map((r, idx) => (idx === i ? { ...r, achieved: e.target.value } : r)))
+                  }
+                  className="w-full min-w-0 font-body text-sm border border-line rounded-lg px-3 py-2 outline-none focus:border-gold"
+                />
+              </label>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+        <TextAreaField label="STS names (one per line)" value={sts} onChange={setSts} />
+        <TextAreaField label="PL names (one per line)" value={pl} onChange={setPl} />
+        <TextAreaField label="Login names (one per line)" value={login} onChange={setLogin} />
+      </div>
+
+      <TextAreaField
+        label="PL → Login watchlist (Company, Month per line)"
+        value={watchlist}
+        onChange={setWatchlist}
+        rows={4}
+      />
+    </ModalShell>
   )
 }
 

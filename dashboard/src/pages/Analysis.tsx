@@ -22,11 +22,11 @@ export default function Analysis() {
         </button>
       }
     >
-      <div className="flex items-start justify-between flex-wrap gap-6">
+      <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-5 sm:gap-6">
         <div>
           <Eyebrow>Lead Analyser</Eyebrow>
-          <h1 className="font-heading font-bold text-[32px] text-ink">Lead Analysis</h1>
-          <p className="font-body text-[15px] text-muted mt-2 max-w-[640px]">
+          <h1 className="font-heading font-bold text-[26px] sm:text-[32px] text-ink">Lead Analysis</h1>
+          <p className="font-body text-sm sm:text-[15px] text-muted mt-2 max-w-[640px]">
             Combined view across Lead Desk – Master and every uploaded source, refreshed by the merge pipeline.
           </p>
           <div className="mt-5">
@@ -36,12 +36,12 @@ export default function Analysis() {
         <PillTabs options={['This Week', 'This Month']} value={range} onChange={(v) => setRange(v as typeof range)} />
       </div>
 
-      <div className="bg-panel border border-line rounded-2xl px-7 py-4 flex items-center justify-between flex-wrap gap-3">
+      <div className="bg-panel border border-line rounded-2xl px-5 sm:px-7 py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <span className="font-body text-sm text-ink">
           <strong>{combined.toLocaleString('en-IN')}</strong> combined unique leads — {merge.fromMaster.toLocaleString('en-IN')} from Lead
           Desk – Master + {merge.fromUploads} merged from uploads, minus {merge.duplicates} duplicates.
         </span>
-        <button onClick={() => setPage('sources')} className="font-body font-semibold text-sm text-gold-dark hover:text-gold whitespace-nowrap">
+        <button onClick={() => setPage('sources')} className="font-body font-semibold text-sm text-gold-dark hover:text-gold whitespace-nowrap self-start sm:self-auto">
           Manage sources →
         </button>
       </div>
@@ -55,16 +55,16 @@ export default function Analysis() {
 
       <div className="flex flex-col gap-4">
         <div className="flex items-center justify-between flex-wrap gap-2">
-          <h2 className="font-heading font-bold text-xl text-ink">New Leads &amp; Activity</h2>
+          <h2 className="font-heading font-bold text-lg sm:text-xl text-ink">New Leads &amp; Activity</h2>
           <span className="font-body text-[13px] text-faint">{range} · September 2026</span>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-          <div className="bg-white border border-line rounded-2xl p-6">
-            <div className="font-heading font-bold text-3xl text-ink">{newLeads}</div>
+          <div className="bg-white border border-line rounded-2xl p-5 sm:p-6">
+            <div className="font-heading font-bold text-2xl sm:text-3xl text-ink">{newLeads}</div>
             <div className="font-body text-sm text-muted mt-1">New leads created {range === 'This Week' ? 'this week' : 'this month'}</div>
           </div>
-          <div className="bg-white border border-line rounded-2xl p-6">
-            <div className="font-heading font-bold text-3xl text-ink">~{calls}</div>
+          <div className="bg-white border border-line rounded-2xl p-5 sm:p-6">
+            <div className="font-heading font-bold text-2xl sm:text-3xl text-ink">~{calls}</div>
             <div className="font-body text-sm text-muted mt-1">Calls logged (4-week estimate)</div>
             <div className="font-body text-[12px] text-faint mt-1">
               4-week rolling estimate — only a 7-day calls count is tracked today.
@@ -77,10 +77,10 @@ export default function Analysis() {
         <table className="w-full text-left">
           <thead>
             <tr className="bg-panel">
-              <th className="font-body text-[11px] font-semibold tracking-[1px] text-faint uppercase px-6 py-3">
+              <th className="font-body text-[11px] font-semibold tracking-[1px] text-faint uppercase px-4 sm:px-6 py-3">
                 Leads Owned (All-time)
               </th>
-              <th className="font-body text-[11px] font-semibold tracking-[1px] text-faint uppercase px-6 py-3 text-right">
+              <th className="font-body text-[11px] font-semibold tracking-[1px] text-faint uppercase px-4 sm:px-6 py-3 text-right">
                 SDR
               </th>
             </tr>
@@ -88,8 +88,8 @@ export default function Analysis() {
           <tbody>
             {data.leadsOwned.map((row) => (
               <tr key={row.name} className="border-t border-line">
-                <td className="px-6 py-4 font-body font-semibold text-sm text-ink">{row.name}</td>
-                <td className="px-6 py-4 font-body text-sm text-ink text-right">{row.count}</td>
+                <td className="px-4 sm:px-6 py-4 font-body font-semibold text-sm text-ink">{row.name}</td>
+                <td className="px-4 sm:px-6 py-4 font-body text-sm text-ink text-right">{row.count}</td>
               </tr>
             ))}
           </tbody>
@@ -98,10 +98,10 @@ export default function Analysis() {
 
       <div className="flex flex-col gap-4">
         <div className="flex items-center justify-between flex-wrap gap-2">
-          <h2 className="font-heading font-bold text-xl text-ink">Pipeline by Status</h2>
+          <h2 className="font-heading font-bold text-lg sm:text-xl text-ink">Pipeline by Status</h2>
           <span className="font-body text-[13px] text-faint">Live snapshot</span>
         </div>
-        <div className="border border-line rounded-2xl p-6 grid grid-cols-1 sm:grid-cols-2 gap-x-10">
+        <div className="border border-line rounded-2xl p-4 sm:p-6 grid grid-cols-1 sm:grid-cols-2 gap-x-10">
           <StatusList rows={data.statusLeft} />
           <StatusList rows={data.statusRight} bordered />
         </div>
@@ -109,29 +109,29 @@ export default function Analysis() {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         <div className="flex flex-col gap-4">
-          <h2 className="font-heading font-bold text-xl text-ink">By Confidence</h2>
-          <div className="grid grid-cols-3 gap-4">
-            <div className="bg-gold-soft rounded-2xl p-5 text-center">
-              <div className="font-heading font-bold text-2xl text-gold-dark">{data.hot}</div>
+          <h2 className="font-heading font-bold text-lg sm:text-xl text-ink">By Confidence</h2>
+          <div className="grid grid-cols-3 gap-3 sm:gap-4">
+            <div className="bg-gold-soft rounded-2xl p-4 sm:p-5 text-center">
+              <div className="font-heading font-bold text-xl sm:text-2xl text-gold-dark">{data.hot}</div>
               <div className="font-body text-[12px] text-muted mt-1">Hot</div>
             </div>
-            <div className="bg-panel rounded-2xl p-5 text-center">
-              <div className="font-heading font-bold text-2xl text-ink">{data.warm}</div>
+            <div className="bg-panel rounded-2xl p-4 sm:p-5 text-center">
+              <div className="font-heading font-bold text-xl sm:text-2xl text-ink">{data.warm}</div>
               <div className="font-body text-[12px] text-muted mt-1">Warm</div>
             </div>
-            <div className="bg-panel rounded-2xl p-5 text-center">
-              <div className="font-heading font-bold text-2xl text-ink">{data.cold.toLocaleString('en-IN')}</div>
+            <div className="bg-panel rounded-2xl p-4 sm:p-5 text-center">
+              <div className="font-heading font-bold text-xl sm:text-2xl text-ink">{data.cold.toLocaleString('en-IN')}</div>
               <div className="font-body text-[12px] text-muted mt-1">Cold</div>
             </div>
           </div>
         </div>
         <div className="flex flex-col gap-4">
-          <h2 className="font-heading font-bold text-xl text-ink">By Lead Source</h2>
+          <h2 className="font-heading font-bold text-lg sm:text-xl text-ink">By Lead Source</h2>
           <div className="border border-line rounded-2xl overflow-hidden">
             {data.bySource.map((row, i) => (
               <div
                 key={row.label}
-                className={`flex items-center justify-between px-6 py-3 ${i > 0 ? 'border-t border-line' : ''}`}
+                className={`flex items-center justify-between px-4 sm:px-6 py-3 ${i > 0 ? 'border-t border-line' : ''}`}
               >
                 <span className="font-body text-sm text-ink">{row.label}</span>
                 <span className="font-body font-semibold text-sm text-ink">{row.value.toLocaleString('en-IN')}</span>
@@ -142,23 +142,23 @@ export default function Analysis() {
       </div>
 
       <div className="flex flex-col gap-4">
-        <h2 className="font-heading font-bold text-xl text-ink">Share This Analysis</h2>
+        <h2 className="font-heading font-bold text-lg sm:text-xl text-ink">Share This Analysis</h2>
         <div className="border border-line rounded-2xl overflow-hidden">
-          <div className="flex items-center justify-between px-6 py-4">
+          <div className="flex items-center justify-between px-4 sm:px-6 py-4">
             <div>
               <div className="font-heading font-semibold text-sm text-ink">Weekly digest</div>
               <div className="font-body text-[12px] text-faint">Every Monday · 9:00 AM</div>
             </div>
             <Toggle checked={digests.weekly} onChange={() => toggleDigest('weekly')} />
           </div>
-          <div className="flex items-center justify-between px-6 py-4 border-t border-line">
+          <div className="flex items-center justify-between px-4 sm:px-6 py-4 border-t border-line">
             <div>
               <div className="font-heading font-semibold text-sm text-ink">Monthly digest</div>
               <div className="font-body text-[12px] text-faint">1st of every month · 9:00 AM</div>
             </div>
             <Toggle checked={digests.monthly} onChange={() => toggleDigest('monthly')} />
           </div>
-          <div className="flex items-center justify-between px-6 py-4 border-t border-line flex-wrap gap-4">
+          <div className="flex flex-col gap-4 px-4 sm:px-6 py-4 border-t border-line">
             <div className="flex items-center gap-2 flex-wrap">
               <span className="font-body text-[13px] text-faint">Recipients:</span>
               {recipients.map((r) => (
@@ -194,11 +194,11 @@ export default function Analysis() {
                 </button>
               )}
             </div>
-            <div className="flex items-center gap-4">
-              <span className="font-body text-[12px] text-faint whitespace-nowrap">Uses the Marketing Performance Digest template</span>
+            <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">
+              <span className="font-body text-[12px] text-faint">Uses the Marketing Performance Digest template</span>
               <button
                 onClick={() => pushToast(`Test email sent to ${recipients.join(', ')}`)}
-                className="bg-gold hover:bg-gold-dark hover:text-white text-ink font-body font-semibold text-sm px-5 py-2.5 rounded-lg transition-colors whitespace-nowrap"
+                className="bg-gold hover:bg-gold-dark hover:text-white text-ink font-body font-semibold text-sm px-5 py-2.5 rounded-lg transition-colors whitespace-nowrap sm:ml-auto"
               >
                 Send test now
               </button>
@@ -212,8 +212,8 @@ export default function Analysis() {
 
 function StatTile({ value, label, color }: { value: string | number; label: string; color?: string }) {
   return (
-    <div className="bg-white border border-line rounded-2xl p-6">
-      <div className={`font-heading font-bold text-3xl ${color ?? 'text-ink'}`}>{value}</div>
+    <div className="bg-white border border-line rounded-2xl p-5 sm:p-6">
+      <div className={`font-heading font-bold text-2xl sm:text-3xl ${color ?? 'text-ink'}`}>{value}</div>
       <div className="font-body text-sm text-muted mt-1">{label}</div>
     </div>
   )
