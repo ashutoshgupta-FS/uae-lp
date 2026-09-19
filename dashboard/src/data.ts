@@ -1,4 +1,16 @@
-import type { FunnelRow, Kpi, OtherLeadSource, Segment, SourceCard, StatusCount, UploadRow, WeeklyFunnelRow } from './types'
+import type {
+  FunnelRow,
+  Kpi,
+  MetricRow,
+  MtdSegmentData,
+  OtherLeadSource,
+  OverviewSegment,
+  Segment,
+  SourceCard,
+  StatusCount,
+  UploadRow,
+  WeeklyFunnelRow,
+} from './types'
 
 export type Period = 'mtd' | 'august'
 export type Range = 'week' | 'month'
@@ -302,6 +314,8 @@ export function inr(value: number): string {
 
 export const WEEK_LABELS = ['Week 1 · Aug 1–7', 'Week 2 · Aug 8–14', 'Week 3 · Aug 15–21', 'Week 4 · Aug 22–31']
 
+export const MTD_WEEK_LABELS = ['Week 1', 'Week 2', 'Week 3', 'Week 4']
+
 function splitFour(n: number): [number, number, number, number] {
   const base = Math.floor(n / 4)
   const rem = n % 4
@@ -316,6 +330,85 @@ export function toMonthlyDisplayRows(rows: FunnelRow[]): WeeklyFunnelRow[] {
     preLogin: { achieved: row.preLogin[0], target: row.preLogin[1], names: row.leadsNames.slice(0, row.preLogin[0]) },
     login: { achieved: row.login[0], target: row.login[1], names: row.leadsNames.slice(0, row.login[0]) },
   }))
+}
+
+export const mtdBySegment: Record<'SME' | 'Enterprise', MtdSegmentData> = {
+  SME: {
+    metrics: [
+      { metric: 'Login', target: 13, achieved: 5 },
+      { metric: 'Pre Login', target: 19, achieved: 5 },
+      { metric: 'STS / Intel', target: 20, achieved: 9 },
+      { metric: 'Leads', target: 482, achieved: 339 },
+    ],
+    stageNames: {
+      sts: [
+        'FEL', 'Shahi Exp 2.0', 'Carlton Wellness Group', 'Core Tech', 'Kiacart Private Limited',
+        'LearnEon Edutech Private Limited', 'KPIL', 'Croyant Technologies', 'Venus Jewel',
+        'Healthware Private Limited.', 'ozmik infra', 'Modern Distropolis Limited', 'Wave Machanics',
+      ],
+      pl: [
+        'FEL', 'Shahi Exp 2.0', 'Carlton Wellness Group', 'Core Tech', 'Kiacart Private Limited',
+        'LearnEon Edutech Private Limited', 'KPIL',
+      ],
+      login: ['Shahi Exp 2.0', 'KPIL', 'Core Tech'],
+    },
+    plToLogin: [
+      { company: 'Kiacart Private Limited', month: 'Sep-2026' },
+      { company: 'LearnEon Edutech Private Limited', month: 'Sep-2026' },
+    ],
+  },
+  Enterprise: {
+    metrics: [
+      { metric: 'Login', target: 5, achieved: 2 },
+      { metric: 'Pre Login', target: 8, achieved: 2 },
+      { metric: 'STS / Intel', target: 8, achieved: 4 },
+      { metric: 'Leads', target: 206, achieved: 145 },
+    ],
+    stageNames: {
+      sts: ['Toyota Connect India', 'Hindalco industries limited', 'Total Energies'],
+      pl: [],
+      login: [
+        'V3 Outsourcing Solutions', 'Textron India Wake', 'Amcor Flexibles India Pvt.Ltd',
+        'Fidelis Technology Services Pvt. Ltd',
+      ],
+    },
+    plToLogin: [
+      { company: 'Planetcast Media Services Pvt. Ltd.', month: 'Sep-2026' },
+      { company: 'Fillpack Technology Pvt. Ltd', month: 'Sep-2026' },
+      { company: 'Vision Diagnostic India private limited', month: 'Sep-2026' },
+    ],
+  },
+}
+
+export function getMtdData(segment: OverviewSegment): MtdSegmentData {
+  if (segment !== 'All') return mtdBySegment[segment]
+  const sme = mtdBySegment.SME
+  const ev = mtdBySegment.Enterprise
+  return {
+    metrics: sme.metrics.map((row, i) => ({
+      metric: row.metric,
+      target: row.target + ev.metrics[i].target,
+      achieved: row.achieved + ev.metrics[i].achieved,
+    })),
+    stageNames: {
+      sts: [...sme.stageNames.sts, ...ev.stageNames.sts],
+      pl: [...sme.stageNames.pl, ...ev.stageNames.pl],
+      login: [...sme.stageNames.login, ...ev.stageNames.login],
+    },
+    plToLogin: [...sme.plToLogin, ...ev.plToLogin],
+  }
+}
+
+export function buildWeeklyMetrics(metrics: MetricRow[]): MetricRow[][] {
+  const weeks: MetricRow[][] = [[], [], [], []]
+  metrics.forEach((row) => {
+    const targetByWeek = splitFour(row.target)
+    const achievedByWeek = splitFour(row.achieved)
+    for (let w = 0; w < 4; w++) {
+      weeks[w].push({ metric: row.metric, target: targetByWeek[w], achieved: achievedByWeek[w] })
+    }
+  })
+  return weeks
 }
 
 export function buildWeeklyFunnel(rows: FunnelRow[]): WeeklyFunnelRow[][] {

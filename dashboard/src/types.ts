@@ -63,3 +63,28 @@ export interface StatusCount {
   label: string
   value: number
 }
+
+export type OverviewSegment = 'SME' | 'Enterprise' | 'All'
+
+export interface MetricRow {
+  metric: string
+  target: number
+  achieved: number
+}
+
+export interface StageNameLists {
+  sts: string[]
+  pl: string[]
+  login: string[]
+}
+
+export interface PlToLoginRow {
+  company: string
+  month: string
+}
+
+export interface MtdSegmentData {
+  metrics: MetricRow[]
+  stageNames: StageNameLists
+  plToLogin: PlToLoginRow[]
+}
