@@ -82,7 +82,7 @@ export default function Overview() {
 
       <div className="flex flex-col gap-4">
         <h2 className="font-heading font-bold text-xl text-ink">Leads by Stage</h2>
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-5 items-start">
           <StageNameColumn title="STS" names={mtd.stageNames.sts} />
           <StageNameColumn title="PL" names={mtd.stageNames.pl} />
           <StageNameColumn title="Login" names={mtd.stageNames.login} />
@@ -204,10 +204,11 @@ function MetricsTable({ rows }: { rows: MetricRow[] }) {
 function StageNameColumn({ title, names }: { title: string; names: string[] }) {
   return (
     <div className="border border-line rounded-2xl overflow-hidden flex flex-col">
-      <div className="bg-ink px-5 py-3">
+      <div className="bg-ink px-5 py-3 flex items-center justify-between gap-2">
         <span className="font-body font-semibold text-[13px] text-white uppercase tracking-[1px]">{title}</span>
+        <span className="font-body text-[12px] text-faint">{names.length}</span>
       </div>
-      <div className="flex flex-col max-h-72 overflow-y-auto">
+      <div className="flex flex-col">
         {names.length === 0 ? (
           <span className="font-body text-sm text-faint px-5 py-4">No leads at this stage yet.</span>
         ) : (
