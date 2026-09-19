@@ -1,6 +1,7 @@
+import { useState } from 'react'
 import { useStore } from '../store'
-import { mergeStatsBySegment, otherLeadSourcesBySegment, primarySourceBySegment } from '../data'
-import { Avatar, DarkPillTabs, Dropzone, Eyebrow, PageShell, StatusBadge } from '../components/ui'
+import { primarySourceBySegment } from '../data'
+import { Avatar, DarkPillTabs, Dropzone, Eyebrow, ModalShell, PageShell, StatusBadge } from '../components/ui'
 
 const STEPS = [
   { title: '1 · Connect', desc: 'Read Lead Desk – Master plus every synced upload.' },
@@ -9,11 +10,15 @@ const STEPS = [
 ]
 
 export default function DataSources() {
-  const { segment, setPage, lastMergeRun, runMerge, merging, recordUpload, pushToast } = useStore()
+  const { segment, setPage, lastMergeRun, runMerge, merging, otherSources, mergeStats, recordSourceLeadUpload, pushToast } =
+    useStore()
   const primary = primarySourceBySegment[segment]
-  const others = otherLeadSourcesBySegment[segment]
-  const merge = mergeStatsBySegment[segment]
+  const others = otherSources[segment]
+  const merge = mergeStats[segment]
   const combined = merge.fromMaster + merge.fromUploads - merge.duplicates
+  const [pendingUpload, setPendingUpload] = useState<{ sourceId: string; sourceName: string; fileName: string } | null>(
+    null,
+  )
 
   return (
     <PageShell
@@ -88,7 +93,10 @@ export default function DataSources() {
                   {src.leads !== null ? `${src.leads} leads` : '—'}
                 </span>
               </div>
-              <Dropzone buttonLabel="Upload file" onFile={(name) => recordUpload(src.id, name)} />
+              <Dropzone
+                buttonLabel="Upload file"
+                onFile={(name) => setPendingUpload({ sourceId: src.id, sourceName: src.name, fileName: name })}
+              />
             </div>
           ))}
         </div>
@@ -147,6 +155,69 @@ export default function DataSources() {
           </div>
         </div>
       </div>
+
+      {pendingUpload && (
+        <LeadCountModal
+          sourceName={pendingUpload.sourceName}
+          fileName={pendingUpload.fileName}
+          onClose={() => setPendingUpload(null)}
+          onConfirm={(leadCount) => {
+            recordSourceLeadUpload(pendingUpload.sourceId, pendingUpload.fileName, leadCount)
+            setPendingUpload(null)
+          }}
+        />
+      )}
     </PageShell>
+  )
+}
+
+function LeadCountModal({
+  sourceName,
+  fileName,
+  onClose,
+  onConfirm,
+}: {
+  sourceName: string
+  fileName: string
+  onClose: () => void
+  onConfirm: (leadCount: number) => void
+}) {
+  const [count, setCount] = useState('')
+
+  return (
+    <ModalShell
+      title={`Confirm upload — ${sourceName}`}
+      onClose={onClose}
+      footer={
+        <>
+          <button onClick={onClose} className="font-body font-semibold text-sm text-muted hover:text-ink px-4 py-2">
+            Cancel
+          </button>
+          <button
+            onClick={() => onConfirm(Math.max(0, Math.round(Number(count)) || 0))}
+            className="bg-gold hover:bg-gold-dark hover:text-white text-ink font-body font-semibold text-sm px-6 py-2.5 rounded-lg transition-colors"
+          >
+            Add to merge pipeline
+          </button>
+        </>
+      }
+    >
+      <p className="font-body text-sm text-muted">
+        <span className="font-semibold text-ink">{fileName}</span> is attached. This app can't read a spreadsheet's
+        contents automatically — enter how many leads are in it so the merge pipeline can count them.
+      </p>
+      <label className="flex flex-col gap-1.5">
+        <span className="font-body text-[11px] text-faint uppercase tracking-[1px]">Leads in this file</span>
+        <input
+          type="number"
+          min={0}
+          autoFocus
+          value={count}
+          onChange={(e) => setCount(e.target.value)}
+          placeholder="e.g. 42"
+          className="w-full min-w-0 font-body text-sm border border-line rounded-lg px-3 py-2 outline-none focus:border-gold"
+        />
+      </label>
+    </ModalShell>
   )
 }

@@ -1,6 +1,26 @@
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react'
-import type { MtdSegmentData, Page, Segment, SourceCard, SpendsPeriodKey, SpendsRow, SpendsSegmentData, UploadRow } from './types'
-import { initialSourceCards, initialUploadsBySegment, mtdBySegment, spendsBySegment } from './data'
+import type {
+  MtdSegmentData,
+  OtherLeadSource,
+  Page,
+  Segment,
+  SourceCard,
+  SpendsPeriodKey,
+  SpendsRow,
+  SpendsSegmentData,
+  UploadRow,
+} from './types'
+import {
+  initialSourceCards,
+  initialUploadsBySegment,
+  mergeStatsBySegment,
+  mtdBySegment,
+  otherLeadSourcesBySegment,
+  primarySourceBySegment,
+  spendsBySegment,
+} from './data'
+
+type MergeStats = { fromMaster: number; fromUploads: number; duplicates: number }
 
 const STORAGE_KEY = 'flipspaces-ops-dashboard-v3'
 
@@ -18,6 +38,8 @@ interface PersistedState {
   mtdImportInfo: Record<'SME' | 'Enterprise', MtdImportInfo>
   spendsData: Record<'SME' | 'Enterprise', SpendsSegmentData>
   spendsImportInfo: Record<'SME' | 'Enterprise', Partial<Record<SpendsPeriodKey, SpendsImportInfo>>>
+  otherSources: Record<Segment, OtherLeadSource[]>
+  mergeStats: Record<Segment, MergeStats>
 }
 
 function defaultState(): PersistedState {
@@ -32,6 +54,8 @@ function defaultState(): PersistedState {
     mtdImportInfo: { SME: null, Enterprise: null },
     spendsData: spendsBySegment,
     spendsImportInfo: { SME: {}, Enterprise: {} },
+    otherSources: otherLeadSourcesBySegment,
+    mergeStats: mergeStatsBySegment,
   }
 }
 
@@ -79,6 +103,9 @@ interface StoreValue {
     rows: SpendsRow[],
     sourceLabel: string,
   ) => void
+  otherSources: Record<Segment, OtherLeadSource[]>
+  mergeStats: Record<Segment, MergeStats>
+  recordSourceLeadUpload: (sourceId: string, fileName: string, leadCount: number) => void
 }
 
 const StoreContext = createContext<StoreValue | null>(null)
@@ -152,6 +179,32 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     [pushToast],
   )
 
+  const recordSourceLeadUpload = useCallback(
+    (sourceId: string, fileName: string, leadCount: number) => {
+      setPersisted((prev) => {
+        const segSources = prev.otherSources[prev.segment]
+        const source = segSources.find((s) => s.id === sourceId)
+        const nextSources = segSources.map((s) =>
+          s.id === sourceId ? { ...s, status: 'Synced' as const, lastSynced: 'Just now', leads: leadCount } : s,
+        )
+        const row: UploadRow = {
+          id: `up-${Date.now()}`,
+          file: fileName,
+          source: source?.name ?? sourceId,
+          uploadedBy: 'You',
+          when: 'Just now',
+        }
+        return {
+          ...prev,
+          otherSources: { ...prev.otherSources, [prev.segment]: nextSources },
+          uploads: { ...prev.uploads, [prev.segment]: [row, ...prev.uploads[prev.segment]] },
+        }
+      })
+      pushToast(`Uploaded ${fileName} — ${leadCount} leads ready to merge`)
+    },
+    [pushToast],
+  )
+
   const toggleDigest = useCallback((which: 'weekly' | 'monthly') => {
     setPersisted((prev) => ({ ...prev, digests: { ...prev.digests, [which]: !prev.digests[which] } }))
   }, [])
@@ -171,12 +224,31 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
   const runMerge = useCallback(async () => {
     setMerging(true)
     await new Promise((resolve) => setTimeout(resolve, 1400))
+
+    const seg = persisted.segment
+    const fromMaster = primarySourceBySegment[seg].leads
+    const fromUploads = persisted.otherSources[seg]
+      .filter((s) => s.status === 'Synced')
+      .reduce((sum, s) => sum + (s.leads ?? 0), 0)
+    const duplicates = Math.round((fromMaster + fromUploads) * 0.03)
+    const previousStats = persisted.mergeStats[seg]
+    const previousCombined = previousStats.fromMaster + previousStats.fromUploads - previousStats.duplicates
+    const nextCombined = fromMaster + fromUploads - duplicates
+
     const now = new Date()
     const stamp = `Today · ${now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}`
-    setPersisted((prev) => ({ ...prev, lastMergeRun: stamp }))
+
+    setPersisted((prev) => ({
+      ...prev,
+      lastMergeRun: stamp,
+      mergeStats: { ...prev.mergeStats, [seg]: { fromMaster, fromUploads, duplicates } },
+    }))
+
     setMerging(false)
-    pushToast('Merge pipeline completed')
-  }, [pushToast])
+    const delta = nextCombined - previousCombined
+    const deltaText = delta === 0 ? 'no change' : `${delta > 0 ? '+' : ''}${delta} vs last run`
+    pushToast(`Merge complete — ${nextCombined.toLocaleString('en-IN')} unique leads (${deltaText})`)
+  }, [pushToast, persisted])
 
   const updateMtdData = useCallback(
     (segment: 'SME' | 'Enterprise', data: MtdSegmentData, sourceLabel: string) => {
@@ -229,6 +301,9 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       spendsData: persisted.spendsData,
       spendsImportInfo: persisted.spendsImportInfo,
       updateSpendsPeriod,
+      otherSources: persisted.otherSources,
+      mergeStats: persisted.mergeStats,
+      recordSourceLeadUpload,
     }),
     [
       page,
@@ -244,6 +319,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       pushToast,
       updateMtdData,
       updateSpendsPeriod,
+      recordSourceLeadUpload,
     ],
   )
 
