@@ -1,33 +1,28 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { useStore } from '../store'
-import { overviewBySegment } from '../data'
-import { Eyebrow, KpiCard, PageShell, PillTabs, SegmentToggle } from '../components/ui'
+import { buildWeeklyFunnel, overviewBySegment, toMonthlyDisplayRows, WEEK_LABELS } from '../data'
+import type { WeeklyFunnelRow } from '../types'
+import { Eyebrow, KpiCard, LeadNamesModal, PageShell, PillTabs, SegmentToggle, StageCell } from '../components/ui'
+
+interface ActiveModal {
+  title: string
+  names: string[]
+}
 
 export default function Overview() {
   const { segment, setSegment, setPage } = useStore()
   const [period, setPeriod] = useState<'September MTD' | 'August 2026'>('September MTD')
+  const [view, setView] = useState<'Monthly' | 'Weekly'>('Monthly')
+  const [modal, setModal] = useState<ActiveModal | null>(null)
   const data = overviewBySegment[segment]
   const kpis = period === 'September MTD' ? data.mtd : data.august
 
-  const totals = data.funnel.reduce(
-    (acc, row) => {
-      acc.leads[0] += row.leads[0]
-      acc.leads[1] += row.leads[1]
-      acc.intel[0] += row.intel[0]
-      acc.intel[1] += row.intel[1]
-      acc.preLogin[0] += row.preLogin[0]
-      acc.preLogin[1] += row.preLogin[1]
-      acc.login[0] += row.login[0]
-      acc.login[1] += row.login[1]
-      return acc
-    },
-    { leads: [0, 0], intel: [0, 0], preLogin: [0, 0], login: [0, 0] } as {
-      leads: [number, number]
-      intel: [number, number]
-      preLogin: [number, number]
-      login: [number, number]
-    },
-  )
+  const monthlyRows = useMemo(() => toMonthlyDisplayRows(data.funnel), [data.funnel])
+  const weeklyRows = useMemo(() => buildWeeklyFunnel(data.funnel), [data.funnel])
+
+  const openModal = (source: string, stage: string, periodLabel: string, names: string[]) => {
+    setModal({ title: `${source} — ${stage} — ${periodLabel}`, names })
+  }
 
   return (
     <PageShell
@@ -70,58 +65,125 @@ export default function Overview() {
       </div>
 
       <div className="flex flex-col gap-4">
-        <div className="flex items-center justify-between flex-wrap gap-2">
+        <div className="flex items-center justify-between flex-wrap gap-3">
           <h2 className="font-heading font-bold text-xl text-ink">Source-wise Target vs Achieved</h2>
-          <span className="font-body text-[13px] text-faint">August 2026 · Monthly · {segment}</span>
+          <div className="flex items-center gap-3 flex-wrap">
+            <span className="font-body text-[13px] text-faint">August 2026 · {segment}</span>
+            <PillTabs options={['Monthly', 'Weekly']} value={view} onChange={(v) => setView(v as typeof view)} />
+          </div>
         </div>
-        <div className="border border-line rounded-2xl overflow-hidden">
-          <table className="w-full text-left">
-            <thead>
-              <tr className="bg-panel">
-                {['Source', 'Leads', 'Intel', 'Pre Login', 'Login'].map((h) => (
-                  <th key={h} className="font-body text-[11px] font-semibold tracking-[1px] text-faint uppercase px-6 py-3">
-                    {h}
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {data.funnel.map((row) => (
-                <tr key={row.source} className="border-t border-line">
-                  <td className="px-6 py-4 font-body font-semibold text-sm text-ink">{row.source}</td>
-                  <td className="px-6 py-4 font-body text-sm text-ink">
-                    {row.leads[0]} / {row.leads[1]}
-                  </td>
-                  <td className="px-6 py-4 font-body text-sm text-ink">
-                    {row.intel[0]} / {row.intel[1]}
-                  </td>
-                  <td className="px-6 py-4 font-body text-sm text-ink">
-                    {row.preLogin[0]} / {row.preLogin[1]}
-                  </td>
-                  <td className="px-6 py-4 font-body text-sm text-ink">
-                    {row.login[0]} / {row.login[1]}
-                  </td>
-                </tr>
-              ))}
-              <tr className="border-t border-line bg-panel">
-                <td className="px-6 py-4 font-body font-bold text-sm text-ink">Total</td>
-                <td className="px-6 py-4 font-body font-bold text-sm text-ink">
-                  {totals.leads[0]} / {totals.leads[1]}
-                </td>
-                <td className="px-6 py-4 font-body font-bold text-sm text-ink">
-                  {totals.intel[0]} / {totals.intel[1]}
-                </td>
-                <td className="px-6 py-4 font-body font-bold text-sm text-ink">
-                  {totals.preLogin[0]} / {totals.preLogin[1]}
-                </td>
-                <td className="px-6 py-4 font-body font-bold text-sm text-ink">
-                  {totals.login[0]} / {totals.login[1]}
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
+
+        <p className="font-body text-[13px] text-faint -mt-1">
+          Click any Intel, Pre Login or Login figure to see which leads reached that stage.
+        </p>
+
+        {view === 'Monthly' ? (
+          <FunnelTable rows={monthlyRows} periodLabel="August 2026" onOpenNames={openModal} />
+        ) : (
+          <div className="flex flex-col gap-6">
+            {weeklyRows.map((rows, i) => (
+              <div key={WEEK_LABELS[i]} className="flex flex-col gap-3">
+                <span className="font-body text-[12px] font-semibold tracking-[1px] text-faint uppercase">
+                  {WEEK_LABELS[i]}
+                </span>
+                <FunnelTable rows={rows} periodLabel={WEEK_LABELS[i]} onOpenNames={openModal} />
+              </div>
+            ))}
+          </div>
+        )}
       </div>
+
+      {modal && <LeadNamesModal title={modal.title} names={modal.names} onClose={() => setModal(null)} />}
     </PageShell>
+  )
+}
+
+function FunnelTable({
+  rows,
+  periodLabel,
+  onOpenNames,
+}: {
+  rows: WeeklyFunnelRow[]
+  periodLabel: string
+  onOpenNames: (source: string, stage: string, periodLabel: string, names: string[]) => void
+}) {
+  const totals = rows.reduce(
+    (acc, row) => {
+      acc.leads[0] += row.leads.achieved
+      acc.leads[1] += row.leads.target
+      acc.intel[0] += row.intel.achieved
+      acc.intel[1] += row.intel.target
+      acc.preLogin[0] += row.preLogin.achieved
+      acc.preLogin[1] += row.preLogin.target
+      acc.login[0] += row.login.achieved
+      acc.login[1] += row.login.target
+      return acc
+    },
+    { leads: [0, 0], intel: [0, 0], preLogin: [0, 0], login: [0, 0] } as Record<string, [number, number]>,
+  )
+
+  return (
+    <div className="border border-line rounded-2xl overflow-hidden">
+      <table className="w-full text-left">
+        <thead>
+          <tr className="bg-panel">
+            {['Source', 'Leads', 'Intel', 'Pre Login', 'Login'].map((h) => (
+              <th key={h} className="font-body text-[11px] font-semibold tracking-[1px] text-faint uppercase px-6 py-3">
+                {h}
+              </th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {rows.map((row) => (
+            <tr key={row.source} className="border-t border-line">
+              <td className="px-6 py-4 font-body font-semibold text-sm text-ink">{row.source}</td>
+              <td className="px-6 py-4 font-body text-sm text-ink">
+                {row.leads.achieved} / {row.leads.target}
+              </td>
+              <td className="px-6 py-4">
+                <StageCell
+                  achieved={row.intel.achieved}
+                  target={row.intel.target}
+                  names={row.intel.names}
+                  onOpen={() => onOpenNames(row.source, 'Intel / STS', periodLabel, row.intel.names)}
+                />
+              </td>
+              <td className="px-6 py-4">
+                <StageCell
+                  achieved={row.preLogin.achieved}
+                  target={row.preLogin.target}
+                  names={row.preLogin.names}
+                  onOpen={() => onOpenNames(row.source, 'Pre Login', periodLabel, row.preLogin.names)}
+                />
+              </td>
+              <td className="px-6 py-4">
+                <StageCell
+                  achieved={row.login.achieved}
+                  target={row.login.target}
+                  names={row.login.names}
+                  onOpen={() => onOpenNames(row.source, 'Login', periodLabel, row.login.names)}
+                />
+              </td>
+            </tr>
+          ))}
+          <tr className="border-t border-line bg-panel">
+            <td className="px-6 py-4 font-body font-bold text-sm text-ink">Total</td>
+            <td className="px-6 py-4 font-body font-bold text-sm text-ink">
+              {totals.leads[0]} / {totals.leads[1]}
+            </td>
+            <td className="px-6 py-4 font-body font-bold text-sm text-ink">
+              {totals.intel[0]} / {totals.intel[1]}
+            </td>
+            <td className="px-6 py-4 font-body font-bold text-sm text-ink">
+              {totals.preLogin[0]} / {totals.preLogin[1]}
+            </td>
+            <td className="px-6 py-4 font-body font-bold text-sm text-ink">
+              {totals.login[0]} / {totals.login[1]}
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
   )
 }

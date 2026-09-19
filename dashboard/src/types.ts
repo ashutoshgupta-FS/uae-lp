@@ -16,6 +16,21 @@ export interface FunnelRow {
   intel: [number, number]
   preLogin: [number, number]
   login: [number, number]
+  leadsNames: string[]
+}
+
+export interface WeeklyStageCell {
+  achieved: number
+  target: number
+  names: string[]
+}
+
+export interface WeeklyFunnelRow {
+  source: string
+  leads: WeeklyStageCell
+  intel: WeeklyStageCell
+  preLogin: WeeklyStageCell
+  login: WeeklyStageCell
 }
 
 export interface SourceCard {

@@ -240,6 +240,69 @@ export function Toggle({ checked, onChange }: { checked: boolean; onChange: () =
   )
 }
 
+export function StageCell({
+  achieved,
+  target,
+  names,
+  onOpen,
+}: {
+  achieved: number
+  target: number
+  names: string[]
+  onOpen: () => void
+}) {
+  return (
+    <button
+      onClick={onOpen}
+      className="font-body text-sm text-ink hover:text-gold-dark underline decoration-dotted decoration-faint underline-offset-4 hover:decoration-gold-dark transition-colors"
+      title={names.length > 0 ? `View ${names.length} lead name${names.length === 1 ? '' : 's'}` : 'No leads yet at this stage'}
+    >
+      {achieved} / {target}
+    </button>
+  )
+}
+
+export function LeadNamesModal({
+  title,
+  names,
+  onClose,
+}: {
+  title: string
+  names: string[]
+  onClose: () => void
+}) {
+  return (
+    <div className="fixed inset-0 bg-ink/40 z-50 flex items-center justify-center p-4" onClick={onClose}>
+      <div
+        className="bg-white rounded-2xl w-full max-w-md max-h-[70vh] overflow-hidden flex flex-col shadow-xl"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="flex items-center justify-between px-6 py-4 border-b border-line">
+          <h3 className="font-heading font-semibold text-[15px] text-ink">{title}</h3>
+          <button onClick={onClose} className="font-body text-faint hover:text-ink text-lg leading-none">
+            ✕
+          </button>
+        </div>
+        <div className="overflow-y-auto px-6 py-4 flex flex-col">
+          {names.length === 0 ? (
+            <span className="font-body text-sm text-faint py-2">No leads at this stage yet.</span>
+          ) : (
+            names.map((name, i) => (
+              <div
+                key={name + i}
+                className={`flex items-center gap-3 py-2.5 ${i > 0 ? 'border-t border-line' : ''}`}
+              >
+                <span className="font-body text-[12px] text-faint w-5">{i + 1}.</span>
+                <span className="font-body text-sm text-ink">{name}</span>
+              </div>
+            ))
+          )}
+        </div>
+      </div>
+    </div>
+  )
+}
+
 export function ToastStack({ toasts }: { toasts: { id: number; message: string }[] }) {
   return (
     <div className="fixed bottom-6 right-6 z-50 flex flex-col gap-2 items-end">
