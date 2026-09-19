@@ -4,35 +4,6 @@ export type SyncStatus = 'Synced' | 'Needs refresh' | 'Not connected'
 
 export type Page = 'overview' | 'uploads' | 'sources' | 'analysis' | 'email' | 'spends'
 
-export interface Kpi {
-  label: string
-  achieved: number
-  target: number
-}
-
-export interface FunnelRow {
-  source: string
-  leads: [number, number]
-  intel: [number, number]
-  preLogin: [number, number]
-  login: [number, number]
-  leadsNames: string[]
-}
-
-export interface WeeklyStageCell {
-  achieved: number
-  target: number
-  names: string[]
-}
-
-export interface WeeklyFunnelRow {
-  source: string
-  leads: WeeklyStageCell
-  intel: WeeklyStageCell
-  preLogin: WeeklyStageCell
-  login: WeeklyStageCell
-}
-
 export interface SourceCard {
   id: string
   name: string

@@ -1,43 +1,67 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useStore } from '../store'
-import { googleAdsAugust, inr, linkedinAugust, outboundCalling, overviewBySegment } from '../data'
+import { cpcOf, cplOf, ctrOf, getMtdData, getSpendsPeriod, inr } from '../data'
 import { DarkPillTabs } from '../components/ui'
 import { Logo } from '../components/Header'
+import type { Segment } from '../types'
+
+function fmtPct(v: number | null): string {
+  return v === null ? '-' : `${v.toFixed(2)}%`
+}
+
+function fmtMoney(v: number | null): string {
+  return v === null ? '-' : inr(Math.round(v))
+}
+
+function fmtTime(d: Date): string {
+  return d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })
+}
 
 export default function EmailPreview() {
-  const { setPage, pushToast } = useStore()
+  const { setPage, pushToast, mtdData, spendsData } = useStore()
   const [preview, setPreview] = useState<'Preview: SME' | 'Preview: Enterprise'>('Preview: SME')
-  const segment = preview === 'Preview: SME' ? 'SME' : 'Enterprise'
-  const august = overviewBySegment[segment].august
+  const segment: Segment = preview === 'Preview: SME' ? 'SME' : 'Enterprise'
+  const [refreshedAt, setRefreshedAt] = useState<Date | null>(null)
 
-  const funnel = overviewBySegment[segment].funnel
-  const totals = funnel.reduce(
-    (acc, row) => {
-      acc.leads[0] += row.leads[0]
-      acc.leads[1] += row.leads[1]
-      acc.intel[0] += row.intel[0]
-      acc.intel[1] += row.intel[1]
-      acc.preLogin[0] += row.preLogin[0]
-      acc.preLogin[1] += row.preLogin[1]
-      acc.login[0] += row.login[0]
-      acc.login[1] += row.login[1]
-      return acc
-    },
-    { leads: [0, 0], intel: [0, 0], preLogin: [0, 0], login: [0, 0] } as Record<string, [number, number]>,
-  )
+  const mtd = getMtdData(segment, mtdData)
+  const spendsRows = getSpendsPeriod(segment, 'monthly', spendsData)
+  const activeChannels = spendsRows.filter((r) => r.spends > 0 || r.impressions > 0 || r.leads > 0)
+
+  // Reflects live data automatically: any edit on Overview/Spends re-renders this page immediately,
+  // since mtdData/spendsData come straight from the shared store.
+  useEffect(() => {
+    setRefreshedAt(new Date())
+  }, [mtdData, spendsData])
+
+  const handleRefresh = () => {
+    setRefreshedAt(new Date())
+    pushToast('Email refreshed with the latest data')
+  }
 
   return (
-    <div className="w-full min-h-screen bg-paper flex flex-col items-center py-10 px-4 gap-8">
+    <div className="w-full min-h-screen bg-paper flex flex-col items-center py-10 px-4 gap-5">
       <DarkPillTabs
         options={['Preview: SME', 'Preview: Enterprise']}
         value={preview}
         onChange={(v) => setPreview(v as typeof preview)}
       />
 
+      <div className="flex items-center gap-3">
+        {refreshedAt && (
+          <span className="font-body text-[12px] text-faint">Last refreshed {fmtTime(refreshedAt)}</span>
+        )}
+        <button
+          onClick={handleRefresh}
+          className="font-body font-semibold text-[13px] bg-gold hover:bg-gold-dark hover:text-white text-ink px-4 py-1.5 rounded-full transition-colors"
+        >
+          ↻ Refresh
+        </button>
+      </div>
+
       <div className="w-full max-w-[640px] bg-white rounded-2xl overflow-hidden border border-line">
         <div className="bg-ink px-5 sm:px-8 py-6 sm:py-8 flex flex-col items-center gap-3 text-center">
           <span className="font-body text-[10px] sm:text-[11px] font-semibold tracking-[2px] text-faint uppercase">
-            Weekly Report — as of 9 Aug 2026 · {segment}
+            Weekly Report — as of 19 Sep 2026 · {segment}
           </span>
           <Logo />
           <span className="font-body text-[10px] sm:text-[11px] font-semibold tracking-[1.5px] text-faint uppercase">
@@ -47,127 +71,69 @@ export default function EmailPreview() {
 
         <div className="p-5 sm:p-8 flex flex-col gap-6 sm:gap-8">
           <p className="font-body text-sm text-ink">
-            Hi team, here's the {segment} lead-gen snapshot for the month, as of 9 Aug 2026.
+            Hi team, here's the {segment} lead-gen snapshot for the month, as of 19 Sep 2026.
           </p>
 
           <div className="flex flex-col gap-3">
-            <h3 className="font-heading font-bold text-sm text-ink uppercase tracking-wide">Monthly Targets — August 2026</h3>
+            <h3 className="font-heading font-bold text-sm text-ink uppercase tracking-wide">MTD Targets — September 2026</h3>
             <div className="overflow-x-auto rounded-lg border border-line">
-            <table className="w-full min-w-[420px] text-left">
-              <thead>
-                <tr className="bg-panel">
-                  {['Metric', 'Target', 'Achieved', 'Deficit'].map((h) => (
-                    <th key={h} className="font-body text-[10px] font-semibold tracking-[1px] text-faint uppercase px-4 py-2">
-                      {h}
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {august.map((kpi) => (
-                  <tr key={kpi.label} className="border-t border-line">
-                    <td className="px-4 py-2.5 font-body font-semibold text-[13px] text-ink">{kpi.label}</td>
-                    <td className="px-4 py-2.5 font-body text-[13px] text-ink">{kpi.target}</td>
-                    <td className="px-4 py-2.5 font-body text-[13px] text-ink">{kpi.achieved}</td>
-                    <td className="px-4 py-2.5 font-body font-semibold text-[13px] text-rust">
-                      {Math.max(kpi.target - kpi.achieved, 0)}
-                    </td>
+              <table className="w-full min-w-[420px] text-left">
+                <thead>
+                  <tr className="bg-panel">
+                    {['Metric', 'Target', 'Achieved', 'Deficit'].map((h) => (
+                      <th key={h} className="font-body text-[10px] font-semibold tracking-[1px] text-faint uppercase px-4 py-2">
+                        {h}
+                      </th>
+                    ))}
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-          </div>
-
-          <div className="flex flex-col gap-3">
-            <h3 className="font-heading font-bold text-sm text-ink uppercase tracking-wide">Source-wise Target vs Achieved</h3>
-            <div className="overflow-x-auto rounded-lg border border-line">
-            <table className="w-full min-w-[420px] text-left">
-              <thead>
-                <tr className="bg-panel">
-                  {['Source', 'Leads', 'Intel', 'PL', 'Login'].map((h) => (
-                    <th key={h} className="font-body text-[10px] font-semibold tracking-[1px] text-faint uppercase px-4 py-2">
-                      {h}
-                    </th>
+                </thead>
+                <tbody>
+                  {mtd.metrics.map((row) => (
+                    <tr key={row.metric} className="border-t border-line">
+                      <td className="px-4 py-2.5 font-body font-semibold text-[13px] text-ink">{row.metric}</td>
+                      <td className="px-4 py-2.5 font-body text-[13px] text-ink">{row.target}</td>
+                      <td className="px-4 py-2.5 font-body text-[13px] text-ink">{row.achieved}</td>
+                      <td className="px-4 py-2.5 font-body font-semibold text-[13px] text-rust">
+                        {Math.max(row.target - row.achieved, 0)}
+                      </td>
+                    </tr>
                   ))}
-                </tr>
-              </thead>
-              <tbody>
-                {funnel.map((row) => (
-                  <tr key={row.source} className="border-t border-line">
-                    <td className="px-4 py-2.5 font-body font-semibold text-[13px] text-ink">{row.source.replace(' / ', '/').replace(' – ', '-')}</td>
-                    <td className="px-4 py-2.5 font-body text-[13px] text-ink">{row.leads[0]}/{row.leads[1]}</td>
-                    <td className="px-4 py-2.5 font-body text-[13px] text-ink">{row.intel[0]}/{row.intel[1]}</td>
-                    <td className="px-4 py-2.5 font-body text-[13px] text-ink">{row.preLogin[0]}/{row.preLogin[1]}</td>
-                    <td className="px-4 py-2.5 font-body text-[13px] text-ink">{row.login[0]}/{row.login[1]}</td>
-                  </tr>
-                ))}
-                <tr className="border-t border-line bg-panel">
-                  <td className="px-4 py-2.5 font-body font-bold text-[13px] text-ink">Total</td>
-                  <td className="px-4 py-2.5 font-body font-bold text-[13px] text-ink">{totals.leads[0]}/{totals.leads[1]}</td>
-                  <td className="px-4 py-2.5 font-body font-bold text-[13px] text-ink">{totals.intel[0]}/{totals.intel[1]}</td>
-                  <td className="px-4 py-2.5 font-body font-bold text-[13px] text-ink">{totals.preLogin[0]}/{totals.preLogin[1]}</td>
-                  <td className="px-4 py-2.5 font-body font-bold text-[13px] text-ink">{totals.login[0]}/{totals.login[1]}</td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-          </div>
-
-          <div className="flex flex-col gap-3">
-            <div className="flex items-center justify-between">
-              <h3 className="font-heading font-bold text-sm text-ink uppercase tracking-wide">Google Ads — August</h3>
-              <span className="font-body font-semibold text-[11px] bg-panel border border-line rounded-full px-2.5 py-1 text-muted">
-                {googleAdsAugust.sts} STS · {googleAdsAugust.preLogin} PL · {googleAdsAugust.login} Login
-              </span>
-            </div>
-            <div className="bg-panel rounded-lg p-4 grid grid-cols-2 sm:grid-cols-5 gap-3">
-              <Metric label="Spend" value={inr(googleAdsAugust.spend)} />
-              <Metric label="Impr." value={googleAdsAugust.impressions.toLocaleString('en-IN')} />
-              <Metric label="Clicks" value={googleAdsAugust.clicks.toString()} />
-              <Metric label="CTR" value={`${googleAdsAugust.ctr}%`} />
-              <Metric label="CPC" value={inr(googleAdsAugust.cpc)} />
-              <Metric label="Leads" value={googleAdsAugust.leads.toString()} />
-              <Metric label="CPL" value={inr(googleAdsAugust.cpl)} />
-              <Metric label="STS" value={googleAdsAugust.sts.toString()} />
-              <Metric label="Pre Login" value={googleAdsAugust.preLogin.toString()} />
-              <Metric label="Login" value={googleAdsAugust.login.toString()} />
+                </tbody>
+              </table>
             </div>
           </div>
 
-          <div className="flex flex-col gap-3">
-            <div className="flex items-center justify-between">
-              <h3 className="font-heading font-bold text-sm text-ink uppercase tracking-wide">LinkedIn — August</h3>
-              <span className="font-body font-semibold text-[11px] bg-panel border border-line rounded-full px-2.5 py-1 text-muted">
-                {linkedinAugust.sts} STS · {linkedinAugust.preLogin} PL · {linkedinAugust.login} Login
-              </span>
+          {activeChannels.length === 0 ? (
+            <div className="bg-panel rounded-lg p-4">
+              <p className="font-body text-[13px] text-muted">
+                No channel spend recorded yet for {segment} this month — add it from the Spends tab and it'll show up
+                here automatically.
+              </p>
             </div>
-            <div className="bg-panel rounded-lg p-4 grid grid-cols-2 sm:grid-cols-5 gap-3">
-              <Metric label="Spend" value={inr(linkedinAugust.spend)} />
-              <Metric label="Impr." value={linkedinAugust.impressions.toLocaleString('en-IN')} />
-              <Metric label="Clicks" value={linkedinAugust.clicks.toString()} />
-              <Metric label="CPC" value={inr(linkedinAugust.cpc)} />
-              <Metric label="CPM" value={inr(linkedinAugust.cpm)} />
-              <Metric label="STS" value={linkedinAugust.sts.toString()} />
-              <Metric label="Pre Login" value={linkedinAugust.preLogin.toString()} />
-              <Metric label="Login" value={linkedinAugust.login.toString()} />
-            </div>
-            <p className="font-body text-[12px] text-faint">
-              Only 1 lead total this week — too small a sample to split leads/CPL by segment, so both are shown blended above.
-            </p>
-          </div>
-
-          <div className="flex flex-col gap-3">
-            <h3 className="font-heading font-bold text-sm text-ink uppercase tracking-wide">Outbound Calling Activity</h3>
-            <div className="bg-panel rounded-lg p-4 grid grid-cols-2 sm:grid-cols-5 gap-3">
-              <Metric label="Dialed" value={outboundCalling.dialed.toString()} />
-              <Metric label="Connected" value={outboundCalling.connected.toString()} />
-              <Metric label="Ringing" value={outboundCalling.ringing.toString()} />
-              <Metric label="Invalid" value={outboundCalling.invalid.toString()} />
-              <Metric label="Info Req." value={outboundCalling.infoReq.toString()} />
-            </div>
-            <p className="font-body text-[12px] text-faint">Funnel from calls: 1 STS · 1 Pre Login · 0 Login · Connect rate 27%</p>
-          </div>
+          ) : (
+            activeChannels.map((row) => (
+              <div key={row.channel} className="flex flex-col gap-3">
+                <div className="flex items-center justify-between">
+                  <h3 className="font-heading font-bold text-sm text-ink uppercase tracking-wide">
+                    {row.channel} — September '26
+                  </h3>
+                  <span className="font-body font-semibold text-[11px] bg-panel border border-line rounded-full px-2.5 py-1 text-muted whitespace-nowrap">
+                    {row.sts} STS · {row.preLogin} PL · {row.login} Login
+                  </span>
+                </div>
+                <div className="bg-panel rounded-lg p-4 grid grid-cols-2 sm:grid-cols-4 gap-3">
+                  <Metric label="Spend" value={fmtMoney(row.spends || null)} />
+                  <Metric label="Impr." value={row.impressions ? row.impressions.toLocaleString('en-IN') : '-'} />
+                  <Metric label="Clicks" value={row.clicks ? row.clicks.toLocaleString('en-IN') : '-'} />
+                  <Metric label="CTR" value={fmtPct(ctrOf(row))} />
+                  <Metric label="CPC" value={fmtMoney(cpcOf(row))} />
+                  <Metric label="Leads" value={row.leads ? row.leads.toLocaleString('en-IN') : '-'} />
+                  <Metric label="CPL" value={fmtMoney(cplOf(row))} />
+                  <Metric label="STS" value={row.sts ? String(row.sts) : '-'} />
+                </div>
+              </div>
+            ))
+          )}
 
           <button
             onClick={() => setPage('overview')}

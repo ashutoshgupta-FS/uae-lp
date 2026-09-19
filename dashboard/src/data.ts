@@ -1,7 +1,5 @@
 import {
   SPENDS_CHANNELS,
-  type FunnelRow,
-  type Kpi,
   type MetricRow,
   type MtdSegmentData,
   type OtherLeadSource,
@@ -14,119 +12,7 @@ import {
   type SpendsSegmentData,
   type StatusCount,
   type UploadRow,
-  type WeeklyFunnelRow,
 } from './types'
-
-export type Period = 'mtd' | 'august'
-export type Range = 'week' | 'month'
-
-interface SegmentOverview {
-  mtd: Kpi[]
-  august: Kpi[]
-  funnel: FunnelRow[]
-}
-
-export const overviewBySegment: Record<Segment, SegmentOverview> = {
-  SME: {
-    mtd: [
-      { label: 'Login', achieved: 5, target: 12 },
-      { label: 'Pre Login', achieved: 5, target: 18 },
-      { label: 'STS / Intel', achieved: 9, target: 18 },
-      { label: 'Leads', achieved: 160, target: 460 },
-    ],
-    august: [
-      { label: 'Login', achieved: 0, target: 4 },
-      { label: 'Pre Login', achieved: 2, target: 7 },
-      { label: 'STS / Intel', achieved: 5, target: 16 },
-      { label: 'Leads', achieved: 14, target: 78 },
-    ],
-    funnel: [
-      {
-        source: 'Google Ads / Website / Inbound',
-        leads: [10, 40],
-        intel: [3, 7],
-        preLogin: [1, 3],
-        login: [0, 1],
-        leadsNames: [
-          'Aarav Shah', 'Meera Joshi', 'Kunal Desai', 'Sanya Kapoor', 'Rohit Bhatia',
-          'Ishita Rao', 'Varun Malhotra', 'Priya Nair', 'Siddharth Menon', 'Tanvi Agarwal',
-        ],
-      },
-      {
-        source: 'LinkedIn Ads / Meta – SMM',
-        leads: [1, 26],
-        intel: [0, 3],
-        preLogin: [0, 1],
-        login: [0, 1],
-        leadsNames: ['Faisal Ahmed'],
-      },
-      {
-        source: 'Outbound Calls',
-        leads: [2, 8],
-        intel: [1, 4],
-        preLogin: [1, 2],
-        login: [0, 1],
-        leadsNames: ['Neha Kulkarni', 'Devansh Pillai'],
-      },
-      {
-        source: 'Affiliate',
-        leads: [0, 3],
-        intel: [0, 2],
-        preLogin: [0, 1],
-        login: [0, 1],
-        leadsNames: [],
-      },
-    ],
-  },
-  Enterprise: {
-    mtd: [
-      { label: 'Login', achieved: 2, target: 6 },
-      { label: 'Pre Login', achieved: 3, target: 9 },
-      { label: 'STS / Intel', achieved: 4, target: 10 },
-      { label: 'Leads', achieved: 38, target: 120 },
-    ],
-    august: [
-      { label: 'Login', achieved: 1, target: 3 },
-      { label: 'Pre Login', achieved: 1, target: 5 },
-      { label: 'STS / Intel', achieved: 3, target: 9 },
-      { label: 'Leads', achieved: 9, target: 40 },
-    ],
-    funnel: [
-      {
-        source: 'Google Ads / Website / Inbound',
-        leads: [4, 15],
-        intel: [2, 5],
-        preLogin: [1, 2],
-        login: [0, 1],
-        leadsNames: ['Omar Al Farsi', 'Layla Haddad', 'Vikram Oberoi', 'Sara Khan'],
-      },
-      {
-        source: 'LinkedIn Ads / Meta – SMM',
-        leads: [1, 10],
-        intel: [0, 2],
-        preLogin: [0, 1],
-        login: [0, 1],
-        leadsNames: ['Zainab Malik'],
-      },
-      {
-        source: 'Outbound Calls',
-        leads: [1, 4],
-        intel: [1, 2],
-        preLogin: [0, 1],
-        login: [0, 1],
-        leadsNames: ['Yusuf Rahman'],
-      },
-      {
-        source: 'Affiliate',
-        leads: [0, 2],
-        intel: [0, 1],
-        preLogin: [0, 1],
-        login: [0, 1],
-        leadsNames: [],
-      },
-    ],
-  },
-}
 
 export const initialSourceCards: SourceCard[] = [
   { id: 'google-ads', name: 'Google Ads', initials: 'GA', lastSynced: 'Today · 9:12 AM', status: 'Synced' },
@@ -281,43 +167,9 @@ export const analysisBySegment: Record<Segment, AnalysisData> = {
   },
 }
 
-export const googleAdsAugust = {
-  spend: 185750,
-  impressions: 4350,
-  clicks: 422,
-  ctr: 9.7,
-  cpc: 440,
-  leads: 10,
-  cpl: 18575,
-  sts: 3,
-  preLogin: 1,
-  login: 0,
-}
-
-export const linkedinAugust = {
-  spend: 53455,
-  impressions: 89096,
-  clicks: 649,
-  cpc: 82,
-  cpm: 6616,
-  sts: 1,
-  preLogin: 1,
-  login: 0,
-}
-
-export const outboundCalling = {
-  dialed: 358,
-  connected: 98,
-  ringing: 178,
-  invalid: 22,
-  infoReq: 13,
-}
-
 export function inr(value: number): string {
   return '₹' + value.toLocaleString('en-IN')
 }
-
-export const WEEK_LABELS = ['Week 1 · Aug 1–7', 'Week 2 · Aug 8–14', 'Week 3 · Aug 15–21', 'Week 4 · Aug 22–31']
 
 export const MTD_WEEK_LABELS = ['Week 1', 'Week 2', 'Week 3', 'Week 4']
 
@@ -325,16 +177,6 @@ function splitFour(n: number): [number, number, number, number] {
   const base = Math.floor(n / 4)
   const rem = n % 4
   return [0, 1, 2, 3].map((i) => base + (i < rem ? 1 : 0)) as [number, number, number, number]
-}
-
-export function toMonthlyDisplayRows(rows: FunnelRow[]): WeeklyFunnelRow[] {
-  return rows.map((row) => ({
-    source: row.source,
-    leads: { achieved: row.leads[0], target: row.leads[1], names: row.leadsNames },
-    intel: { achieved: row.intel[0], target: row.intel[1], names: row.leadsNames.slice(0, row.intel[0]) },
-    preLogin: { achieved: row.preLogin[0], target: row.preLogin[1], names: row.leadsNames.slice(0, row.preLogin[0]) },
-    login: { achieved: row.login[0], target: row.login[1], names: row.leadsNames.slice(0, row.login[0]) },
-  }))
 }
 
 export const emptyMtdSegmentData: MtdSegmentData = {
@@ -513,49 +355,6 @@ export function buildWeeklyMetrics(metrics: MetricRow[]): MetricRow[][] {
   return weeks
 }
 
-export function buildWeeklyFunnel(rows: FunnelRow[]): WeeklyFunnelRow[][] {
-  const weeks: WeeklyFunnelRow[][] = [[], [], [], []]
-
-  rows.forEach((row) => {
-    const leadsAchievedByWeek = splitFour(row.leads[0])
-    const leadsTargetByWeek = splitFour(row.leads[1])
-    const intelAchievedByWeek = splitFour(row.intel[0])
-    const intelTargetByWeek = splitFour(row.intel[1])
-    const preLoginAchievedByWeek = splitFour(row.preLogin[0])
-    const preLoginTargetByWeek = splitFour(row.preLogin[1])
-    const loginAchievedByWeek = splitFour(row.login[0])
-    const loginTargetByWeek = splitFour(row.login[1])
-
-    let cursor = 0
-    for (let w = 0; w < 4; w++) {
-      const weekLeadsCount = leadsAchievedByWeek[w]
-      const weekLeadNames = row.leadsNames.slice(cursor, cursor + weekLeadsCount)
-      cursor += weekLeadsCount
-
-      weeks[w].push({
-        source: row.source,
-        leads: { achieved: weekLeadsCount, target: leadsTargetByWeek[w], names: weekLeadNames },
-        intel: {
-          achieved: intelAchievedByWeek[w],
-          target: intelTargetByWeek[w],
-          names: weekLeadNames.slice(0, intelAchievedByWeek[w]),
-        },
-        preLogin: {
-          achieved: preLoginAchievedByWeek[w],
-          target: preLoginTargetByWeek[w],
-          names: weekLeadNames.slice(0, preLoginAchievedByWeek[w]),
-        },
-        login: {
-          achieved: loginAchievedByWeek[w],
-          target: loginTargetByWeek[w],
-          names: weekLeadNames.slice(0, loginAchievedByWeek[w]),
-        },
-      })
-    }
-  })
-
-  return weeks
-}
 
 function emptySpendsRow(channel: SpendsChannel): SpendsRow {
   return { channel, spends: 0, impressions: 0, clicks: 0, leads: 0, sts: 0, preLogin: 0, login: 0 }
