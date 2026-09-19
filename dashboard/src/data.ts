@@ -1,15 +1,20 @@
-import type {
-  FunnelRow,
-  Kpi,
-  MetricRow,
-  MtdSegmentData,
-  OtherLeadSource,
-  OverviewSegment,
-  Segment,
-  SourceCard,
-  StatusCount,
-  UploadRow,
-  WeeklyFunnelRow,
+import {
+  SPENDS_CHANNELS,
+  type FunnelRow,
+  type Kpi,
+  type MetricRow,
+  type MtdSegmentData,
+  type OtherLeadSource,
+  type OverviewSegment,
+  type Segment,
+  type SourceCard,
+  type SpendsChannel,
+  type SpendsPeriodKey,
+  type SpendsRow,
+  type SpendsSegmentData,
+  type StatusCount,
+  type UploadRow,
+  type WeeklyFunnelRow,
 } from './types'
 
 export type Period = 'mtd' | 'august'
@@ -550,4 +555,150 @@ export function buildWeeklyFunnel(rows: FunnelRow[]): WeeklyFunnelRow[][] {
   })
 
   return weeks
+}
+
+function emptySpendsRow(channel: SpendsChannel): SpendsRow {
+  return { channel, spends: 0, impressions: 0, clicks: 0, leads: 0, sts: 0, preLogin: 0, login: 0 }
+}
+
+export function emptySpendsPeriod(): SpendsRow[] {
+  return SPENDS_CHANNELS.map(emptySpendsRow)
+}
+
+export function emptySpendsSegmentData(): SpendsSegmentData {
+  return {
+    monthly: emptySpendsPeriod(),
+    week1: emptySpendsPeriod(),
+    week2: emptySpendsPeriod(),
+    week3: emptySpendsPeriod(),
+    week4: emptySpendsPeriod(),
+  }
+}
+
+function spendsRow(
+  channel: SpendsChannel,
+  spends: number,
+  impressions: number,
+  clicks: number,
+  leads: number,
+  sts = 0,
+  preLogin = 0,
+  login = 0,
+): SpendsRow {
+  return { channel, spends, impressions, clicks, leads, sts, preLogin, login }
+}
+
+export const spendsBySegment: Record<'SME' | 'Enterprise', SpendsSegmentData> = {
+  SME: {
+    monthly: [
+      spendsRow('Google', 552273, 47044, 2893, 140, 13, 7, 7),
+      spendsRow('Meta', 90875, 318202, 2278, 85, 0, 0, 0),
+      spendsRow('LinkedIn', 0, 0, 0, 0, 0, 0, 0),
+      spendsRow('Chatbot', 0, 0, 0, 0, 0, 0, 0),
+      spendsRow('Others', 0, 0, 0, 0, 0, 0, 0),
+    ],
+    week1: [
+      spendsRow('Google', 175555, 18410, 1332, 38, 5, 3, 3),
+      spendsRow('Meta', 34892, 128069, 954, 31, 0, 0, 0),
+      spendsRow('LinkedIn', 0, 0, 0, 0, 0, 0, 0),
+      spendsRow('Chatbot', 0, 0, 0, 0, 0, 0, 0),
+      spendsRow('Others', 0, 0, 0, 0, 0, 0, 0),
+    ],
+    week2: [
+      spendsRow('Google', 186960, 18292, 1629, 53, 5, 3, 2),
+      spendsRow('Meta', 35222, 124785, 0, 0, 0, 0, 0),
+      spendsRow('LinkedIn', 0, 0, 0, 0, 0, 0, 0),
+      spendsRow('Chatbot', 0, 0, 0, 0, 0, 0, 0),
+      spendsRow('Others', 0, 0, 0, 0, 0, 0, 0),
+    ],
+    week3: emptySpendsPeriod(),
+    week4: emptySpendsPeriod(),
+  },
+  Enterprise: emptySpendsSegmentData(),
+}
+
+export function getSpendsPeriod(
+  segment: OverviewSegment,
+  period: SpendsPeriodKey,
+  bySegment: Record<'SME' | 'Enterprise', SpendsSegmentData> = spendsBySegment,
+): SpendsRow[] {
+  if (segment !== 'All') return bySegment[segment][period]
+  const sme = bySegment.SME[period]
+  const ev = bySegment.Enterprise[period]
+  return SPENDS_CHANNELS.map((channel, i) => ({
+    channel,
+    spends: sme[i].spends + ev[i].spends,
+    impressions: sme[i].impressions + ev[i].impressions,
+    clicks: sme[i].clicks + ev[i].clicks,
+    leads: sme[i].leads + ev[i].leads,
+    sts: sme[i].sts + ev[i].sts,
+    preLogin: sme[i].preLogin + ev[i].preLogin,
+    login: sme[i].login + ev[i].login,
+  }))
+}
+
+export function ctrOf(row: SpendsRow): number | null {
+  return row.impressions > 0 ? (row.clicks / row.impressions) * 100 : null
+}
+
+export function cpcOf(row: SpendsRow): number | null {
+  return row.clicks > 0 ? row.spends / row.clicks : null
+}
+
+export function cplOf(row: SpendsRow): number | null {
+  return row.leads > 0 ? row.spends / row.leads : null
+}
+
+export function sumSpendsRows(rows: SpendsRow[]): Omit<SpendsRow, 'channel'> {
+  return rows.reduce(
+    (acc, row) => ({
+      spends: acc.spends + row.spends,
+      impressions: acc.impressions + row.impressions,
+      clicks: acc.clicks + row.clicks,
+      leads: acc.leads + row.leads,
+      sts: acc.sts + row.sts,
+      preLogin: acc.preLogin + row.preLogin,
+      login: acc.login + row.login,
+    }),
+    { spends: 0, impressions: 0, clicks: 0, leads: 0, sts: 0, preLogin: 0, login: 0 },
+  )
+}
+
+export const SPENDS_PERIOD_LABELS: Record<SpendsPeriodKey, string> = {
+  monthly: "September '26 · Monthly",
+  week1: 'Week 1',
+  week2: 'Week 2',
+  week3: 'Week 3',
+  week4: 'Week 4',
+}
+
+export function serializeSpendsCsv(rows: SpendsRow[]): string {
+  const lines = ['Channel,Spends,Impressions,Clicks,Leads,STS,PreLogin,Login']
+  rows.forEach((r) => lines.push(`${r.channel},${r.spends},${r.impressions},${r.clicks},${r.leads},${r.sts},${r.preLogin},${r.login}`))
+  return lines.join('\n')
+}
+
+function normalizeChannelName(name: string): SpendsChannel | null {
+  const n = name.trim().toLowerCase()
+  const found = SPENDS_CHANNELS.find((c) => c.toLowerCase() === n)
+  return found ?? null
+}
+
+export function parseSpendsCsv(text: string): SpendsRow[] | null {
+  const lines = text.split(/\r?\n/).map((l) => l.trim()).filter(Boolean)
+  const rows = new Map(SPENDS_CHANNELS.map((c) => [c, emptySpendsRow(c)]))
+  let sawAnyData = false
+
+  for (const line of lines) {
+    const cells = line.split(',').map((c) => c.trim())
+    if (cells[0]?.toLowerCase() === 'channel') continue
+    const channel = normalizeChannelName(cells[0] ?? '')
+    if (!channel) continue
+    const [spends, impressions, clicks, leads, sts, preLogin, login] = cells.slice(1).map((c) => Number(c) || 0)
+    rows.set(channel, { channel, spends, impressions, clicks, leads, sts, preLogin, login })
+    sawAnyData = true
+  }
+
+  if (!sawAnyData) return null
+  return SPENDS_CHANNELS.map((c) => rows.get(c)!)
 }

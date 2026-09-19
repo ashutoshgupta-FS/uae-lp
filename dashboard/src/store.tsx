@@ -1,10 +1,11 @@
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react'
-import type { MtdSegmentData, Page, Segment, SourceCard, UploadRow } from './types'
-import { initialSourceCards, initialUploadsBySegment, mtdBySegment } from './data'
+import type { MtdSegmentData, Page, Segment, SourceCard, SpendsPeriodKey, SpendsRow, SpendsSegmentData, UploadRow } from './types'
+import { initialSourceCards, initialUploadsBySegment, mtdBySegment, spendsBySegment } from './data'
 
-const STORAGE_KEY = 'flipspaces-ops-dashboard-v2'
+const STORAGE_KEY = 'flipspaces-ops-dashboard-v3'
 
 type MtdImportInfo = { fileName: string; when: string } | null
+type SpendsImportInfo = { fileName: string; when: string } | null
 
 interface PersistedState {
   segment: Segment
@@ -15,6 +16,8 @@ interface PersistedState {
   lastMergeRun: string
   mtdData: Record<'SME' | 'Enterprise', MtdSegmentData>
   mtdImportInfo: Record<'SME' | 'Enterprise', MtdImportInfo>
+  spendsData: Record<'SME' | 'Enterprise', SpendsSegmentData>
+  spendsImportInfo: Record<'SME' | 'Enterprise', Partial<Record<SpendsPeriodKey, SpendsImportInfo>>>
 }
 
 function defaultState(): PersistedState {
@@ -27,6 +30,8 @@ function defaultState(): PersistedState {
     lastMergeRun: 'Today · 9:00 AM',
     mtdData: mtdBySegment,
     mtdImportInfo: { SME: null, Enterprise: null },
+    spendsData: spendsBySegment,
+    spendsImportInfo: { SME: {}, Enterprise: {} },
   }
 }
 
@@ -66,13 +71,21 @@ interface StoreValue {
   mtdData: Record<'SME' | 'Enterprise', MtdSegmentData>
   mtdImportInfo: Record<'SME' | 'Enterprise', MtdImportInfo>
   updateMtdData: (segment: 'SME' | 'Enterprise', data: MtdSegmentData, sourceLabel: string) => void
+  spendsData: Record<'SME' | 'Enterprise', SpendsSegmentData>
+  spendsImportInfo: Record<'SME' | 'Enterprise', Partial<Record<SpendsPeriodKey, SpendsImportInfo>>>
+  updateSpendsPeriod: (
+    segment: 'SME' | 'Enterprise',
+    period: SpendsPeriodKey,
+    rows: SpendsRow[],
+    sourceLabel: string,
+  ) => void
 }
 
 const StoreContext = createContext<StoreValue | null>(null)
 
 function pageFromHash(): Page {
   const h = window.location.hash.replace('#/', '') as Page
-  if (['overview', 'uploads', 'sources', 'analysis', 'email'].includes(h)) return h
+  if (['overview', 'uploads', 'sources', 'analysis', 'email', 'spends'].includes(h)) return h
   return 'overview'
 }
 
@@ -173,6 +186,21 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     [pushToast],
   )
 
+  const updateSpendsPeriod = useCallback(
+    (segment: 'SME' | 'Enterprise', period: SpendsPeriodKey, rows: SpendsRow[], sourceLabel: string) => {
+      setPersisted((prev) => ({
+        ...prev,
+        spendsData: { ...prev.spendsData, [segment]: { ...prev.spendsData[segment], [period]: rows } },
+        spendsImportInfo: {
+          ...prev.spendsImportInfo,
+          [segment]: { ...prev.spendsImportInfo[segment], [period]: { fileName: sourceLabel, when: 'Just now' } },
+        },
+      }))
+      pushToast(`${segment === 'Enterprise' ? 'EV' : segment} spends updated from ${sourceLabel}`)
+    },
+    [pushToast],
+  )
+
   const value = useMemo<StoreValue>(
     () => ({
       page,
@@ -194,6 +222,9 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       mtdData: persisted.mtdData,
       mtdImportInfo: persisted.mtdImportInfo,
       updateMtdData,
+      spendsData: persisted.spendsData,
+      spendsImportInfo: persisted.spendsImportInfo,
+      updateSpendsPeriod,
     }),
     [
       page,
@@ -208,6 +239,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       runMerge,
       pushToast,
       updateMtdData,
+      updateSpendsPeriod,
     ],
   )
 

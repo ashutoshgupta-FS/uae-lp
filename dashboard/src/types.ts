@@ -2,7 +2,7 @@ export type Segment = 'SME' | 'Enterprise'
 
 export type SyncStatus = 'Synced' | 'Needs refresh' | 'Not connected'
 
-export type Page = 'overview' | 'uploads' | 'sources' | 'analysis' | 'email'
+export type Page = 'overview' | 'uploads' | 'sources' | 'analysis' | 'email' | 'spends'
 
 export interface Kpi {
   label: string
@@ -88,3 +88,22 @@ export interface MtdSegmentData {
   stageNames: StageNameLists
   plToLogin: PlToLoginRow[]
 }
+
+export const SPENDS_CHANNELS = ['Google', 'Meta', 'LinkedIn', 'Chatbot', 'Others'] as const
+export type SpendsChannel = (typeof SPENDS_CHANNELS)[number]
+
+export interface SpendsRow {
+  channel: SpendsChannel
+  spends: number
+  impressions: number
+  clicks: number
+  leads: number
+  sts: number
+  preLogin: number
+  login: number
+}
+
+export const SPENDS_PERIODS = ['monthly', 'week1', 'week2', 'week3', 'week4'] as const
+export type SpendsPeriodKey = (typeof SPENDS_PERIODS)[number]
+
+export type SpendsSegmentData = Record<SpendsPeriodKey, SpendsRow[]>
