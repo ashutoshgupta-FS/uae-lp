@@ -332,58 +332,59 @@ export function toMonthlyDisplayRows(rows: FunnelRow[]): WeeklyFunnelRow[] {
   }))
 }
 
+export const emptyMtdSegmentData: MtdSegmentData = {
+  metrics: [
+    { metric: 'Login', target: 0, achieved: 0 },
+    { metric: 'Pre Login', target: 0, achieved: 0 },
+    { metric: 'STS / Intel', target: 0, achieved: 0 },
+    { metric: 'Leads', target: 0, achieved: 0 },
+  ],
+  stageNames: { sts: [], pl: [], login: [] },
+  plToLogin: [],
+}
+
 export const mtdBySegment: Record<'SME' | 'Enterprise', MtdSegmentData> = {
   SME: {
     metrics: [
-      { metric: 'Login', target: 13, achieved: 5 },
-      { metric: 'Pre Login', target: 19, achieved: 5 },
-      { metric: 'STS / Intel', target: 20, achieved: 9 },
-      { metric: 'Leads', target: 482, achieved: 339 },
+      { metric: 'Login', target: 18, achieved: 7 },
+      { metric: 'Pre Login', target: 27, achieved: 7 },
+      { metric: 'STS / Intel', target: 28, achieved: 13 },
+      { metric: 'Leads', target: 688, achieved: 484 },
     ],
     stageNames: {
       sts: [
         'FEL', 'Shahi Exp 2.0', 'Carlton Wellness Group', 'Core Tech', 'Kiacart Private Limited',
-        'LearnEon Edutech Private Limited', 'KPIL', 'Croyant Technologies', 'Venus Jewel',
-        'Healthware Private Limited.', 'ozmik infra', 'Modern Distropolis Limited', 'Wave Machanics',
+        'LearnEon Edutech Private Limited', 'KPIL', 'Toyota Connect India', 'Croyant Technologies',
+        'Venus Jewel', 'Healthware Private Limited.', 'ozmik infra', 'Hindalco industries limited',
+        'Modern Distropolis Limited', 'Total Energies', 'Wave Machanics',
       ],
       pl: [
         'FEL', 'Shahi Exp 2.0', 'Carlton Wellness Group', 'Core Tech', 'Kiacart Private Limited',
         'LearnEon Edutech Private Limited', 'KPIL',
       ],
-      login: ['Shahi Exp 2.0', 'KPIL', 'Core Tech'],
-    },
-    plToLogin: [
-      { company: 'Kiacart Private Limited', month: 'Sep-2026' },
-      { company: 'LearnEon Edutech Private Limited', month: 'Sep-2026' },
-    ],
-  },
-  Enterprise: {
-    metrics: [
-      { metric: 'Login', target: 5, achieved: 2 },
-      { metric: 'Pre Login', target: 8, achieved: 2 },
-      { metric: 'STS / Intel', target: 8, achieved: 4 },
-      { metric: 'Leads', target: 206, achieved: 145 },
-    ],
-    stageNames: {
-      sts: ['Toyota Connect India', 'Hindalco industries limited', 'Total Energies'],
-      pl: [],
       login: [
-        'V3 Outsourcing Solutions', 'Textron India Wake', 'Amcor Flexibles India Pvt.Ltd',
-        'Fidelis Technology Services Pvt. Ltd',
+        'V3 Outsourcing Solutions', 'Shahi Exp 2.0', 'Textron India Wake', 'Amcor Flexibles India Pvt.Ltd',
+        'Fidelis Technology Services Pvt. Ltd', 'KPIL', 'Core Tech',
       ],
     },
     plToLogin: [
       { company: 'Planetcast Media Services Pvt. Ltd.', month: 'Sep-2026' },
       { company: 'Fillpack Technology Pvt. Ltd', month: 'Sep-2026' },
       { company: 'Vision Diagnostic India private limited', month: 'Sep-2026' },
+      { company: 'Kiacart Private Limited', month: 'Sep-2026' },
+      { company: 'LearnEon Edutech Private Limited', month: 'Sep-2026' },
     ],
   },
+  Enterprise: emptyMtdSegmentData,
 }
 
-export function getMtdData(segment: OverviewSegment): MtdSegmentData {
-  if (segment !== 'All') return mtdBySegment[segment]
-  const sme = mtdBySegment.SME
-  const ev = mtdBySegment.Enterprise
+export function getMtdData(
+  segment: OverviewSegment,
+  bySegment: Record<'SME' | 'Enterprise', MtdSegmentData> = mtdBySegment,
+): MtdSegmentData {
+  if (segment !== 'All') return bySegment[segment]
+  const sme = bySegment.SME
+  const ev = bySegment.Enterprise
   return {
     metrics: sme.metrics.map((row, i) => ({
       metric: row.metric,
@@ -396,6 +397,102 @@ export function getMtdData(segment: OverviewSegment): MtdSegmentData {
       login: [...sme.stageNames.login, ...ev.stageNames.login],
     },
     plToLogin: [...sme.plToLogin, ...ev.plToLogin],
+  }
+}
+
+const MTD_METRIC_ORDER = ['Login', 'Pre Login', 'STS / Intel', 'Leads']
+
+function normalizeMetricName(name: string): string | null {
+  const n = name.trim().toLowerCase().replace(/\s+/g, ' ')
+  if (n === 'login') return 'Login'
+  if (n === 'pre login' || n === 'prelogin') return 'Pre Login'
+  if (n === 'sts / intel' || n === 'sts/intel' || n === 'sts' || n === 'intel') return 'STS / Intel'
+  if (n === 'leads') return 'Leads'
+  return null
+}
+
+export function serializeMtdCsv(data: MtdSegmentData): string {
+  const lines: string[] = []
+  lines.push('# Metrics')
+  lines.push('Metric,Target,Achieved')
+  data.metrics.forEach((row) => lines.push(`${row.metric},${row.target},${row.achieved}`))
+  lines.push('')
+  lines.push('# STS')
+  data.stageNames.sts.forEach((name) => lines.push(name))
+  lines.push('')
+  lines.push('# PL')
+  data.stageNames.pl.forEach((name) => lines.push(name))
+  lines.push('')
+  lines.push('# Login')
+  data.stageNames.login.forEach((name) => lines.push(name))
+  lines.push('')
+  lines.push('# Watchlist')
+  lines.push('Company,Month')
+  data.plToLogin.forEach((row) => lines.push(`${row.company},${row.month}`))
+  return lines.join('\n')
+}
+
+export function parseMtdCsv(text: string): MtdSegmentData | null {
+  const lines = text.split(/\r?\n/)
+  const metrics = new Map(MTD_METRIC_ORDER.map((m) => [m, { metric: m, target: 0, achieved: 0 }]))
+  const sts: string[] = []
+  const pl: string[] = []
+  const login: string[] = []
+  const plToLogin: { company: string; month: string }[] = []
+
+  type Section = 'metrics' | 'sts' | 'pl' | 'login' | 'watchlist' | null
+  let section: Section = null
+  let sawAnyData = false
+
+  for (const raw of lines) {
+    const line = raw.trim()
+    if (!line) continue
+    if (line.startsWith('#')) {
+      const header = line.replace(/^#+/, '').trim().toLowerCase()
+      if (header === 'metrics') section = 'metrics'
+      else if (header === 'sts') section = 'sts'
+      else if (header === 'pl') section = 'pl'
+      else if (header === 'login') section = 'login'
+      else if (header === 'watchlist') section = 'watchlist'
+      else section = null
+      continue
+    }
+
+    const cells = line.split(',').map((c) => c.trim())
+
+    if (section === 'metrics') {
+      if (cells[0]?.toLowerCase() === 'metric') continue
+      const name = normalizeMetricName(cells[0] ?? '')
+      const target = Number(cells[1])
+      const achieved = Number(cells[2])
+      if (name && Number.isFinite(target) && Number.isFinite(achieved)) {
+        metrics.set(name, { metric: name, target, achieved })
+        sawAnyData = true
+      }
+    } else if (section === 'sts') {
+      sts.push(line)
+      sawAnyData = true
+    } else if (section === 'pl') {
+      pl.push(line)
+      sawAnyData = true
+    } else if (section === 'login') {
+      login.push(line)
+      sawAnyData = true
+    } else if (section === 'watchlist') {
+      if (cells[0]?.toLowerCase() === 'company') continue
+      if (cells[0]) {
+        plToLogin.push({ company: cells[0], month: cells[1] ?? '' })
+        sawAnyData = true
+      }
+    }
+  }
+
+  if (!sawAnyData) return null
+
+  return {
+    metrics: MTD_METRIC_ORDER.map((m) => metrics.get(m)!),
+    stageNames: { sts, pl, login },
+    plToLogin,
   }
 }
 

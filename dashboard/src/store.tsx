@@ -1,8 +1,10 @@
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react'
-import type { Page, Segment, SourceCard, UploadRow } from './types'
-import { initialSourceCards, initialUploadsBySegment } from './data'
+import type { MtdSegmentData, Page, Segment, SourceCard, UploadRow } from './types'
+import { initialSourceCards, initialUploadsBySegment, mtdBySegment } from './data'
 
-const STORAGE_KEY = 'flipspaces-ops-dashboard-v1'
+const STORAGE_KEY = 'flipspaces-ops-dashboard-v2'
+
+type MtdImportInfo = { fileName: string; when: string } | null
 
 interface PersistedState {
   segment: Segment
@@ -11,15 +13,11 @@ interface PersistedState {
   digests: { weekly: boolean; monthly: boolean }
   recipients: string[]
   lastMergeRun: string
+  mtdData: Record<'SME' | 'Enterprise', MtdSegmentData>
+  mtdImportInfo: Record<'SME' | 'Enterprise', MtdImportInfo>
 }
 
-function loadState(): PersistedState {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY)
-    if (raw) return JSON.parse(raw) as PersistedState
-  } catch {
-    // ignore corrupt storage
-  }
+function defaultState(): PersistedState {
   return {
     segment: 'SME',
     sourceCards: initialSourceCards,
@@ -27,7 +25,20 @@ function loadState(): PersistedState {
     digests: { weekly: true, monthly: true },
     recipients: ['Ashutosh Gupta', 'Central Marketing'],
     lastMergeRun: 'Today · 9:00 AM',
+    mtdData: mtdBySegment,
+    mtdImportInfo: { SME: null, Enterprise: null },
   }
+}
+
+function loadState(): PersistedState {
+  const fallback = defaultState()
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY)
+    if (raw) return { ...fallback, ...(JSON.parse(raw) as Partial<PersistedState>) }
+  } catch {
+    // ignore corrupt storage
+  }
+  return fallback
 }
 
 interface Toast {
@@ -52,6 +63,9 @@ interface StoreValue {
   merging: boolean
   toasts: Toast[]
   pushToast: (message: string) => void
+  mtdData: Record<'SME' | 'Enterprise', MtdSegmentData>
+  mtdImportInfo: Record<'SME' | 'Enterprise', MtdImportInfo>
+  updateMtdData: (segment: 'SME' | 'Enterprise', data: MtdSegmentData, sourceLabel: string) => void
 }
 
 const StoreContext = createContext<StoreValue | null>(null)
@@ -147,6 +161,18 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     pushToast('Merge pipeline completed')
   }, [pushToast])
 
+  const updateMtdData = useCallback(
+    (segment: 'SME' | 'Enterprise', data: MtdSegmentData, sourceLabel: string) => {
+      setPersisted((prev) => ({
+        ...prev,
+        mtdData: { ...prev.mtdData, [segment]: data },
+        mtdImportInfo: { ...prev.mtdImportInfo, [segment]: { fileName: sourceLabel, when: 'Just now' } },
+      }))
+      pushToast(`${segment === 'Enterprise' ? 'EV' : segment} data updated from ${sourceLabel}`)
+    },
+    [pushToast],
+  )
+
   const value = useMemo<StoreValue>(
     () => ({
       page,
@@ -165,8 +191,24 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       merging,
       toasts,
       pushToast,
+      mtdData: persisted.mtdData,
+      mtdImportInfo: persisted.mtdImportInfo,
+      updateMtdData,
     }),
-    [page, persisted, merging, toasts, setPage, setSegment, recordUpload, toggleDigest, addRecipient, runMerge, pushToast],
+    [
+      page,
+      persisted,
+      merging,
+      toasts,
+      setPage,
+      setSegment,
+      recordUpload,
+      toggleDigest,
+      addRecipient,
+      runMerge,
+      pushToast,
+      updateMtdData,
+    ],
   )
 
   return <StoreContext.Provider value={value}>{children}</StoreContext.Provider>
